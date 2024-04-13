@@ -5,7 +5,7 @@
 Recommended command to create the image:
 
 ```sh
-docker build --build-arg="JAVA_PARAMETER=-Xmx2048M -Xms2048M" --build-arg="SPIGOT=false" -t minecraftImage .
+docker build --build-arg="JAVA_PARAMETER=-Xmx2048M -Xms2048M" --build-arg="START_SPIGOT=false" -t minecraftImage .
 ```
 
 Recommended command for exiting the container:

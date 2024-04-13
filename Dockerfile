@@ -1,11 +1,13 @@
 # syntax=docker/dockerfile:1
 
+
 #------------------------------------------------------------------------------
 ### System
 #------------------------------------------------------------------------------
 
 # Create a new build stage from a base image.
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS base
+
 
 # Execute build command: Updates the system
 RUN \
@@ -42,8 +44,8 @@ STOPSIGNAL SIGTERM
 # Example: `--build-arg="JAVA_PARAMETER= -Xmx1024M -Xms1024M "`
 ARG JAVA_PARAMETER="-Xmx1024M -Xms1024M"
 
-# Example: `--build-arg="SPIGOT=false"`
-ARG SPIGOT=false
+# Example: `--build-arg="START_SPIGOT=false"`
+ARG START_SPIGOT=false
 
 # docker container create -----------------------------------------------------
 
@@ -187,18 +189,46 @@ RUN FILE="/opt/jdk-21.0.2/bin/java"; if [ -f "$FILE" ] ; then :; else exit 1 ; f
 # Set environment variable: Makes `java` known as a program
 ENV PATH=/opt/jdk-21.0.2/bin:$PATH
 
-#RUN exit 1
+
+#------------------------------------------------------------------------------
+### Spigotmc
+#------------------------------------------------------------------------------
+
+# Create a new build stage from a base image.
+FROM base AS SPIGOT
+
+# Change working directory.
+WORKDIR /BuildTools
+
+# Download BuildTools
+# TODO-Production
+#ADD \
+#  --checksum=sha256:42678cf1a115e6a75711f4e925b3c2af3a814171af37c7fde9e9b611ded90637 \
+#  https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar \
+#  BuildTools.jar
+
+# TODO-Debug: 
+ADD BuildTools.jar /BuildTools/
+
+# Execute build command: Build spigotmc
+#RUN java -jar BuildTools.jar --rev latest
+
+# TODO-Debug: 
+ADD "${MINECRAFT_SPIGOT}" /BuildTools/
+
 
 #------------------------------------------------------------------------------
 ### Minecraft Vanilla
 #------------------------------------------------------------------------------
+
+FROM base AS NORMAL
 
 WORKDIR /app
 
 COPY <<EOF startup.json
 {
   "start": {
-    "ifFalseThenVanillaElseSpigot": ${SPIGOT}
+    "ifFalseThenVanillaElseSpigot": ${START_SPIGOT}
   },
   "java": {
     "param": "${JAVA_PARAMETER}"
@@ -222,41 +252,10 @@ RUN FILE=/app/"${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1
 RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_VANILLA}" nogui || exit 3 ;
 
 
-
-#------------------------------------------------------------------------------
-### Spigotmc
-#------------------------------------------------------------------------------
-
-### Build spigotmc
-
-# Change working directory.
-WORKDIR /BuildTools
-
-# Download BuildTools
-# TODO-Production
-#ADD \
-#  --checksum=sha256:42678cf1a115e6a75711f4e925b3c2af3a814171af37c7fde9e9b611ded90637 \
-#  https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar \
-#  BuildTools.jar
-
-# TODO-Debug: 
-ADD BuildTools.jar /BuildTools/
-
-# Execute build command: Build spigotmc
-# RUN java -jar BuildTools.jar --rev latest
-
-# TODO-Debug: 
-ADD "${MINECRAFT_SPIGOT}" /BuildTools/
-
-# Copy the created jar file into folder, clean everything up and rename the folder.
-
+COPY --from=SPIGOT /BuildTools/"${MINECRAFT_SPIGOT}" /app/
 WORKDIR /app
-WORKDIR /
-RUN cp /BuildTools/"${MINECRAFT_SPIGOT}" /app/
-RUN rm -r /BuildTools/
+RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_SPIGOT}" nogui || exit 3 ;
 
-WORKDIR /app
-RUN java -jar "${MINECRAFT_SPIGOT}" nogui || exit 3 ;
 
 #------------------------------------------------------------------------------
 ### Mods
