@@ -8,13 +8,8 @@
 # Create a new build stage from a base image.
 FROM ubuntu:22.04 AS base
 
-
 # Execute build command: Updates the system
-RUN \
-  apt update && \
-  apt install -y jq && \
-  apt install -y git && \
-  apt install -y wget
+RUN apt update
 
 
 #------------------------------------------------------------------------------
@@ -197,6 +192,9 @@ ENV PATH=/opt/jdk-21.0.2/bin:$PATH
 # Create a new build stage from a base image.
 FROM base AS SPIGOT
 
+RUN \
+  apt install -y git
+
 # Change working directory.
 WORKDIR /BuildTools
 
@@ -223,6 +221,10 @@ ADD "${MINECRAFT_SPIGOT}" /BuildTools/
 
 FROM base AS NORMAL
 
+RUN \
+  apt install -y jq && \
+  apt install -y wget
+  
 WORKDIR /app
 
 COPY <<EOF startup.json
