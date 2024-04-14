@@ -1,4 +1,4 @@
-# Minecraft via Docker
+# MinecraftViaDocker
 
 <img src="readmeMisc/overview.jpg" width="300" alt="">
 

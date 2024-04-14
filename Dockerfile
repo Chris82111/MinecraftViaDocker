@@ -20,6 +20,7 @@ RUN apt update
 LABEL com.chris82111.minecraft.game.version="1.20.4"
 
 ENV VERSION="1.20.4"
+ENV MINECRAFT_APPS_VERSION="/minecraft/apps/${VERSION}/"
 
 # Create volume mounts.
 # Example: `--mount type=bind,source="$(pwd)"/minecraft,target=/minecraft`
@@ -81,11 +82,15 @@ ENV evalInitialCopy='/bin/sh -c "\
   
 # @brief    Copies files to the mount bind folder, but does not overwrite existing files
 #           Example: `eval $evalCopyVersions`
-# @return   Nothing
+# @return   string, log message
 ENV evalCopyVersions='/bin/sh -c "\
-  mkdir -p ./apps/ ; \
-  cp -nr /app/apps/${VERSION}/ /minecraft/apps/ ; \
-  " '   
+  mkdir -p ${MINECRAFT_APPS_VERSION} ; \
+  cp -n /app/plugins/GroupManager.3.2.jar ${MINECRAFT_APPS_VERSION}/GroupManager.3.2.jar ; \
+  cp -n /app/plugins/MultiverseCore.4.3.12.jar ${MINECRAFT_APPS_VERSION}/MultiverseCore.4.3.12.jar ; \
+  cp -n /app/\"${MINECRAFT_VANILLA}\" ${MINECRAFT_APPS_VERSION}/\"${MINECRAFT_VANILLA}\" ; \
+  cp -n /app/\"${MINECRAFT_SPIGOT}\" ${MINECRAFT_APPS_VERSION}/\"${MINECRAFT_SPIGOT}\" ; \
+  echo \"The data has been copied here ${MINECRAFT_APPS_VERSION}\" ; \
+  " '
 
 # @brief    The value of the `eula` key in the `eula.txt` file in the current folder is set to `true`
 #           Example: `eval $evalSetEulaTrue`
@@ -292,11 +297,7 @@ ADD MultiverseCore.4.3.12.jar .
 
 # Copy current versions
 WORKDIR /app/apps/${VERSION}
-RUN \
-  cp -n /app/plugins/GroupManager.3.2.jar GroupManager.3.2.jar ; \
-  cp -n /app/plugins/MultiverseCore.4.3.12.jar MultiverseCore.4.3.12.jar ; \
-  cp -n /app/"${MINECRAFT_VANILLA}" "${MINECRAFT_VANILLA}" ; \
-  cp -n /app/"${MINECRAFT_SPIGOT}" "${MINECRAFT_SPIGOT}"
+
   
 #------------------------------------------------------------------------------
 ### Mods
