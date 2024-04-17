@@ -191,7 +191,6 @@ ENV PATH=/opt/jdk-21.0.2/bin:$PATH
 ### Spigotmc
 #------------------------------------------------------------------------------
 
-# Create a new build stage from a base image.
 FROM base AS SPIGOT
 
 RUN \
@@ -246,6 +245,7 @@ ADD ${MOD_GROUP_MANAGER} .
 # TODO-Debug: 
 ADD ${MOD_MULTIVERSE_CORE} .
 
+
 #------------------------------------------------------------------------------
 ### Minecraft
 #------------------------------------------------------------------------------
@@ -259,6 +259,7 @@ WORKDIR /app
 
 # create startup --------------------------------------------------------------
 
+# Creates a start configuration file whose data can be changed.
 COPY <<EOF startup.json
 {
   "start": {
@@ -283,19 +284,20 @@ EOF
 ADD "${MINECRAFT_VANILLA}" .
 
 # Execute build command: Checks if Minecraft is available
-RUN FILE=/app/"${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
+RUN FILE="${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
 
+# Starts Minecraft for the first time without agreeing to the EULA
 RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_VANILLA}" nogui || exit 3 ;
 
+# Copy Spigot and mods
 COPY --from=SPIGOT /BuildTools/"${MINECRAFT_SPIGOT}" /app/
-
 COPY --from=SPIGOT /Downloads/GroupManager.3.2.jar /app/plugins/
-
 COPY --from=SPIGOT /Downloads/MultiverseCore.4.3.12.jar /app/plugins/
 
-WORKDIR /app
+# Starts Spiegot for the first time without agreeing to the EULA
 RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_SPIGOT}" nogui || exit 3 ;
 
+# Setup the entrypoint
 WORKDIR /minecraft
 ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteEntry} $(eval ${evalInitialCopy})\" && \
@@ -305,6 +307,7 @@ ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteEntry} java app  : $(eval ${evalGetMinecraftApp})\" && \
   java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui && \
   echo \"The program has been executed\" "]
+
 
 #------------------------------------------------------------------------------
 ### EOF
