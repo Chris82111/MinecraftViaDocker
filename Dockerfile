@@ -1,8 +1,7 @@
 # syntax=docker/dockerfile:1
 
-
 #------------------------------------------------------------------------------
-### System
+### Base
 #------------------------------------------------------------------------------
 
 # Create a new build stage from a base image.
@@ -11,16 +10,11 @@ FROM ubuntu:22.04 AS base
 # Execute build command: Updates the system
 RUN apt update
 
-
-#------------------------------------------------------------------------------
-### Settings
-#------------------------------------------------------------------------------
+# Version
+ENV VERSION="1.20.4"
 
 # Custom metadata
 LABEL com.chris82111.minecraft.game.version="1.20.4"
-
-ENV VERSION="1.20.4"
-ENV MINECRAFT_APPS_VERSION="/minecraft/apps/${VERSION}/"
 
 # Create volume mounts.
 # Example: `--mount type=bind,source="$(pwd)"/minecraft,target=/minecraft`
@@ -49,11 +43,9 @@ ARG START_SPIGOT=false
 # Example: `--env ACCEPT_EULA=true`
 ENV ACCEPT_EULA="false"
 
+# variables -------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-### Functions
-#------------------------------------------------------------------------------
-
+ENV MINECRAFT_APPS_VERSION="/minecraft/apps/${VERSION}/"
 ENV MINECRAFT_VANILLA="minecraft_server.${VERSION}.jar"
 ENV MINECRAFT_SPIGOT="spigot-${VERSION}.jar"
 
@@ -64,9 +56,12 @@ ENV colorBYellow='\033[1;33m'
 ENV colorBGreen='\033[1;32m'
 ENV colorBPurple='\033[1;35m'
 ENV colorNormal='\033[0m'
+
 ENV noteInfo="[ ${colorBYellow}inf${colorNormal} ]"
 ENV noteNothing="[ ${colorBPurple}nul${colorNormal} ]"
 ENV noteEntry="[ ${colorBGreen}ent${colorNormal} ]"
+
+# functions -------------------------------------------------------------------
 
 # @brief    If the mount bind folder is empty the local data is copied
 #           Example: `eval $evalInitialCopy`
@@ -159,9 +154,7 @@ ENV evalGetMinecraftApp='/bin/sh -c "\
     fi ; \
   fi " '
 
-#------------------------------------------------------------------------------
-### Opt Software
-#------------------------------------------------------------------------------
+# opt. Software ---------------------------------------------------------------
 
 WORKDIR /build/
 
@@ -198,7 +191,10 @@ ENV PATH=/opt/jdk-21.0.2/bin:$PATH
 FROM base AS SPIGOT
 
 RUN \
-  apt install -y git
+  apt install -y git && \
+  apt install -y wget
+
+# build spigot ----------------------------------------------------------------
 
 # Change working directory.
 WORKDIR /BuildTools
@@ -219,54 +215,7 @@ ADD BuildTools.jar /BuildTools/
 # TODO-Debug: 
 ADD "${MINECRAFT_SPIGOT}" /BuildTools/
 
-
-#------------------------------------------------------------------------------
-### Minecraft Vanilla
-#------------------------------------------------------------------------------
-
-FROM base AS NORMAL
-
-RUN \
-  apt install -y jq && \
-  apt install -y wget
-  
-WORKDIR /app
-
-COPY <<EOF startup.json
-{
-  "start": {
-    "ifFalseThenVanillaElseSpigot": ${START_SPIGOT}
-  },
-  "java": {
-    "param": "${JAVA_PARAMETER}"
-  }
-}
-EOF
-
-# Add local or remote files and directories: Downloads Minecraft
-# TODO-Production
-#ADD \
-#  --checksum=sha256:c03fa6f39daa69ddf413c965a3a83084db746a7a138ce535a693293b5472d363 \
-#  https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar \
-#  "${MINECRAFT_VANILLA}"
-
-# TODO-Debug: 
-ADD "${MINECRAFT_VANILLA}" .
-
-# Execute build command: Checks if Minecraft is available
-RUN FILE=/app/"${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
-
-RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_VANILLA}" nogui || exit 3 ;
-
-
-COPY --from=SPIGOT /BuildTools/"${MINECRAFT_SPIGOT}" /app/
-WORKDIR /app
-RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_SPIGOT}" nogui || exit 3 ;
-
-
-#------------------------------------------------------------------------------
-### Mods
-#------------------------------------------------------------------------------
+# mods download ---------------------------------------------------------------
 
 # GroupManager
 # source https://github.com/ElgarL/GroupManager/releases
@@ -295,16 +244,57 @@ WORKDIR /app/plugins
 ADD MultiverseCore.4.3.12.jar .
 
 
-# Copy current versions
-WORKDIR /app/apps/${VERSION}
+#------------------------------------------------------------------------------
+### Minecraft
+#------------------------------------------------------------------------------
 
+FROM base AS NORMAL
+
+RUN \
+  apt install -y jq
   
-#------------------------------------------------------------------------------
-### Mods
-#------------------------------------------------------------------------------
+WORKDIR /app
+
+# create startup --------------------------------------------------------------
+
+COPY <<EOF startup.json
+{
+  "start": {
+    "ifFalseThenVanillaElseSpigot": ${START_SPIGOT}
+  },
+  "java": {
+    "param": "${JAVA_PARAMETER}"
+  }
+}
+EOF
+
+# create startup --------------------------------------------------------------
+
+# Add local or remote files and directories: Downloads Minecraft
+# TODO-Production
+#ADD \
+#  --checksum=sha256:c03fa6f39daa69ddf413c965a3a83084db746a7a138ce535a693293b5472d363 \
+#  https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar \
+#  "${MINECRAFT_VANILLA}"
+
+# TODO-Debug: 
+ADD "${MINECRAFT_VANILLA}" .
+
+# Execute build command: Checks if Minecraft is available
+RUN FILE=/app/"${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
+
+RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_VANILLA}" nogui || exit 3 ;
+
+COPY --from=SPIGOT /BuildTools/"${MINECRAFT_SPIGOT}" /app/
+
+COPY --from=SPIGOT /app/plugins/GroupManager.3.2.jar /app/plugins/
+
+COPY --from=SPIGOT /app/plugins/MultiverseCore.4.3.12.jar /app/plugins/
+
+WORKDIR /app
+RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_SPIGOT}" nogui || exit 3 ;
 
 WORKDIR /minecraft
-
 ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteEntry} $(eval ${evalInitialCopy})\" && \
   echo \"${noteEntry} $(eval ${evalCopyVersions})\" && \
@@ -313,10 +303,6 @@ ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteEntry} java app  : $(eval ${evalGetMinecraftApp})\" && \
   java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui && \
   echo \"The program has been executed\" "]
-  
-# TODO-Debug:
-# while :; do sleep 10; done
-
 
 #------------------------------------------------------------------------------
 ### EOF
