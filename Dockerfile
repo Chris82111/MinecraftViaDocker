@@ -1,8 +1,7 @@
 # syntax=docker/dockerfile:1
 
-
 #------------------------------------------------------------------------------
-### System
+### Base
 #------------------------------------------------------------------------------
 
 # Create a new build stage from a base image.
@@ -11,16 +10,11 @@ FROM ubuntu:22.04 AS base
 # Execute build command: Updates the system
 RUN apt update
 
-
-#------------------------------------------------------------------------------
-### Settings
-#------------------------------------------------------------------------------
+# Version
+ENV VERSION="1.20.4"
 
 # Custom metadata
-LABEL com.chris82111.minecraft.game.version="1.20.4"
-
-ENV VERSION="1.20.4"
-ENV MINECRAFT_APPS_VERSION="/minecraft/apps/${VERSION}/"
+LABEL com.chris82111.minecraft.game.version=${VERSION}
 
 # Create volume mounts.
 # Example: `--mount type=bind,source="$(pwd)"/minecraft,target=/minecraft`
@@ -49,13 +43,15 @@ ARG START_SPIGOT=false
 # Example: `--env ACCEPT_EULA=true`
 ENV ACCEPT_EULA="false"
 
+# variables -------------------------------------------------------------------
 
-#------------------------------------------------------------------------------
-### Functions
-#------------------------------------------------------------------------------
+ENV MINECRAFT_APPS_VERSION="/minecraft/apps/${VERSION}/"
 
 ENV MINECRAFT_VANILLA="minecraft_server.${VERSION}.jar"
 ENV MINECRAFT_SPIGOT="spigot-${VERSION}.jar"
+
+ENV MOD_GROUP_MANAGER="GroupManager.3.2.jar"
+ENV MOD_MULTIVERSE_CORE="MultiverseCore.4.3.12.jar"
 
 # Stores additional configurations
 ENV STARTUP_NAME="startup.json"
@@ -64,9 +60,12 @@ ENV colorBYellow='\033[1;33m'
 ENV colorBGreen='\033[1;32m'
 ENV colorBPurple='\033[1;35m'
 ENV colorNormal='\033[0m'
+
 ENV noteInfo="[ ${colorBYellow}inf${colorNormal} ]"
 ENV noteNothing="[ ${colorBPurple}nul${colorNormal} ]"
 ENV noteEntry="[ ${colorBGreen}ent${colorNormal} ]"
+
+# functions -------------------------------------------------------------------
 
 # @brief    If the mount bind folder is empty the local data is copied
 #           Example: `eval $evalInitialCopy`
@@ -85,8 +84,8 @@ ENV evalInitialCopy='/bin/sh -c "\
 # @return   string, log message
 ENV evalCopyVersions='/bin/sh -c "\
   mkdir -p ${MINECRAFT_APPS_VERSION} ; \
-  cp -n /app/plugins/GroupManager.3.2.jar ${MINECRAFT_APPS_VERSION}/GroupManager.3.2.jar ; \
-  cp -n /app/plugins/MultiverseCore.4.3.12.jar ${MINECRAFT_APPS_VERSION}/MultiverseCore.4.3.12.jar ; \
+  cp -n /app/plugins/${MOD_GROUP_MANAGER} ${MINECRAFT_APPS_VERSION}/${MOD_GROUP_MANAGER} ; \
+  cp -n /app/plugins/${MOD_MULTIVERSE_CORE} ${MINECRAFT_APPS_VERSION}/${MOD_MULTIVERSE_CORE} ; \
   cp -n /app/\"${MINECRAFT_VANILLA}\" ${MINECRAFT_APPS_VERSION}/\"${MINECRAFT_VANILLA}\" ; \
   cp -n /app/\"${MINECRAFT_SPIGOT}\" ${MINECRAFT_APPS_VERSION}/\"${MINECRAFT_SPIGOT}\" ; \
   echo \"The data has been copied here ${MINECRAFT_APPS_VERSION}\" ; \
@@ -159,9 +158,7 @@ ENV evalGetMinecraftApp='/bin/sh -c "\
     fi ; \
   fi " '
 
-#------------------------------------------------------------------------------
-### Opt Software
-#------------------------------------------------------------------------------
+# opt. Software ---------------------------------------------------------------
 
 WORKDIR /build/
 
@@ -194,11 +191,13 @@ ENV PATH=/opt/jdk-21.0.2/bin:$PATH
 ### Spigotmc
 #------------------------------------------------------------------------------
 
-# Create a new build stage from a base image.
 FROM base AS SPIGOT
 
 RUN \
-  apt install -y git
+  apt install -y git && \
+  apt install -y wget
+
+# build spigot ----------------------------------------------------------------
 
 # Change working directory.
 WORKDIR /BuildTools
@@ -219,19 +218,48 @@ ADD BuildTools.jar /BuildTools/
 # TODO-Debug: 
 ADD "${MINECRAFT_SPIGOT}" /BuildTools/
 
+# mods download ---------------------------------------------------------------
+
+WORKDIR /Downloads
+
+# GroupManager
+# source https://github.com/ElgarL/GroupManager/releases
+# TODO-Production
+#ADD \
+#  --checksum=sha256:7c9fa7e2ea5b3ff2b114be876b2521976408e78ec1587ee56f4aae65521f30ef \
+#  https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar \
+#  ${MOD_GROUP_MANAGER}
+
+# TODO-Debug: 
+ADD ${MOD_GROUP_MANAGER} .
+
+# multiverse-core
+# source https://dev.bukkit.org/projects/multiverse-core/files
+# TODO-Production
+#RUN \
+#  wget https://dev.bukkit.org/projects/multiverse-core/files/4744018/download \
+#  -O ${MOD_MULTIVERSE_CORE} && \
+#  echo "98237AAF35C6EE7BFD95FB7F399EF703B3E72BFF8EAB488A904AAD9D4530CD10 ${MOD_MULTIVERSE_CORE}" | \
+#  sha256sum --check || exit 4
+
+# TODO-Debug: 
+ADD ${MOD_MULTIVERSE_CORE} .
+
 
 #------------------------------------------------------------------------------
-### Minecraft Vanilla
+### Minecraft
 #------------------------------------------------------------------------------
 
 FROM base AS NORMAL
 
 RUN \
-  apt install -y jq && \
-  apt install -y wget
+  apt install -y jq
   
 WORKDIR /app
 
+# create startup --------------------------------------------------------------
+
+# Creates a start configuration file whose data can be changed.
 COPY <<EOF startup.json
 {
   "start": {
@@ -242,6 +270,8 @@ COPY <<EOF startup.json
   }
 }
 EOF
+
+# create startup --------------------------------------------------------------
 
 # Add local or remote files and directories: Downloads Minecraft
 # TODO-Production
@@ -254,57 +284,21 @@ EOF
 ADD "${MINECRAFT_VANILLA}" .
 
 # Execute build command: Checks if Minecraft is available
-RUN FILE=/app/"${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
+RUN FILE="${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
 
+# Starts Minecraft for the first time without agreeing to the EULA
 RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_VANILLA}" nogui || exit 3 ;
 
-
+# Copy Spigot and mods
 COPY --from=SPIGOT /BuildTools/"${MINECRAFT_SPIGOT}" /app/
-WORKDIR /app
+COPY --from=SPIGOT /Downloads/GroupManager.3.2.jar /app/plugins/
+COPY --from=SPIGOT /Downloads/MultiverseCore.4.3.12.jar /app/plugins/
+
+# Starts Spiegot for the first time without agreeing to the EULA
 RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_SPIGOT}" nogui || exit 3 ;
 
-
-#------------------------------------------------------------------------------
-### Mods
-#------------------------------------------------------------------------------
-
-# GroupManager
-# source https://github.com/ElgarL/GroupManager/releases
-WORKDIR /app/plugins
-#RUN wget https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar -O GroupManager.3.2.jar
-# TODO-Production
-#ADD \
-#  --checksum=sha256:7c9fa7e2ea5b3ff2b114be876b2521976408e78ec1587ee56f4aae65521f30ef \
-#  https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar \
-#  GroupManager.3.2.jar
-
-# TODO-Debug: 
-ADD GroupManager.3.2.jar .
-
-# multiverse-core
-# source https://dev.bukkit.org/projects/multiverse-core/files
-WORKDIR /app/plugins
-# TODO-Production
-#RUN \
-#  wget https://dev.bukkit.org/projects/multiverse-core/files/4744018/download \
-#  -O MultiverseCore.4.3.12.jar && \
-#  echo "98237AAF35C6EE7BFD95FB7F399EF703B3E72BFF8EAB488A904AAD9D4530CD10 MultiverseCore.4.3.12.jar" | \
-#  sha256sum --check || exit 4
-
-# TODO-Debug: 
-ADD MultiverseCore.4.3.12.jar .
-
-
-# Copy current versions
-WORKDIR /app/apps/${VERSION}
-
-  
-#------------------------------------------------------------------------------
-### Mods
-#------------------------------------------------------------------------------
-
+# Setup the entrypoint
 WORKDIR /minecraft
-
 ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteEntry} $(eval ${evalInitialCopy})\" && \
   echo \"${noteEntry} $(eval ${evalCopyVersions})\" && \
@@ -313,9 +307,6 @@ ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteEntry} java app  : $(eval ${evalGetMinecraftApp})\" && \
   java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui && \
   echo \"The program has been executed\" "]
-  
-# TODO-Debug:
-# while :; do sleep 10; done
 
 
 #------------------------------------------------------------------------------
