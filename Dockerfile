@@ -8,6 +8,7 @@
 FROM ubuntu:22.04 AS base
 
 # Execute build command: Updates the system
+# apt -> apk
 RUN apt update
 
 # Version
@@ -48,6 +49,8 @@ ENV ACCEPT_EULA="false"
 ENV MINECRAFT_APPS_VERSION="/minecraft/apps/${VERSION}/"
 ENV MINECRAFT_VANILLA="minecraft_server.${VERSION}.jar"
 ENV MINECRAFT_SPIGOT="spigot-${VERSION}.jar"
+ENV MOD_GROUP_MANAGER="GroupManager.3.2.jar"
+ENV MOD_MULTIVERSE_CORE="MultiverseCore.4.3.12.jar"
 
 # Stores additional configurations
 ENV STARTUP_NAME="startup.json"
@@ -80,8 +83,8 @@ ENV evalInitialCopy='/bin/sh -c "\
 # @return   string, log message
 ENV evalCopyVersions='/bin/sh -c "\
   mkdir -p ${MINECRAFT_APPS_VERSION} ; \
-  cp -n /app/plugins/GroupManager.3.2.jar ${MINECRAFT_APPS_VERSION}/GroupManager.3.2.jar ; \
-  cp -n /app/plugins/MultiverseCore.4.3.12.jar ${MINECRAFT_APPS_VERSION}/MultiverseCore.4.3.12.jar ; \
+  cp -n /app/plugins/${MOD_GROUP_MANAGER} ${MINECRAFT_APPS_VERSION}/${MOD_GROUP_MANAGER} ; \
+  cp -n /app/plugins/${MOD_MULTIVERSE_CORE} ${MINECRAFT_APPS_VERSION}/${MOD_MULTIVERSE_CORE} ; \
   cp -n /app/\"${MINECRAFT_VANILLA}\" ${MINECRAFT_APPS_VERSION}/\"${MINECRAFT_VANILLA}\" ; \
   cp -n /app/\"${MINECRAFT_SPIGOT}\" ${MINECRAFT_APPS_VERSION}/\"${MINECRAFT_SPIGOT}\" ; \
   echo \"The data has been copied here ${MINECRAFT_APPS_VERSION}\" ; \
@@ -217,32 +220,30 @@ ADD "${MINECRAFT_SPIGOT}" /BuildTools/
 
 # mods download ---------------------------------------------------------------
 
+WORKDIR /Downloads
+
 # GroupManager
 # source https://github.com/ElgarL/GroupManager/releases
-WORKDIR /app/plugins
-#RUN wget https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar -O GroupManager.3.2.jar
 # TODO-Production
 #ADD \
 #  --checksum=sha256:7c9fa7e2ea5b3ff2b114be876b2521976408e78ec1587ee56f4aae65521f30ef \
 #  https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar \
-#  GroupManager.3.2.jar
+#  ${MOD_GROUP_MANAGER}
 
 # TODO-Debug: 
-ADD GroupManager.3.2.jar .
+ADD ${MOD_GROUP_MANAGER} .
 
 # multiverse-core
 # source https://dev.bukkit.org/projects/multiverse-core/files
-WORKDIR /app/plugins
 # TODO-Production
 #RUN \
 #  wget https://dev.bukkit.org/projects/multiverse-core/files/4744018/download \
-#  -O MultiverseCore.4.3.12.jar && \
-#  echo "98237AAF35C6EE7BFD95FB7F399EF703B3E72BFF8EAB488A904AAD9D4530CD10 MultiverseCore.4.3.12.jar" | \
+#  -O ${MOD_MULTIVERSE_CORE} && \
+#  echo "98237AAF35C6EE7BFD95FB7F399EF703B3E72BFF8EAB488A904AAD9D4530CD10 ${MOD_MULTIVERSE_CORE}" | \
 #  sha256sum --check || exit 4
 
 # TODO-Debug: 
-ADD MultiverseCore.4.3.12.jar .
-
+ADD ${MOD_MULTIVERSE_CORE} .
 
 #------------------------------------------------------------------------------
 ### Minecraft
@@ -287,9 +288,9 @@ RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_VANILLA}" nogui || exit 3 ;
 
 COPY --from=SPIGOT /BuildTools/"${MINECRAFT_SPIGOT}" /app/
 
-COPY --from=SPIGOT /app/plugins/GroupManager.3.2.jar /app/plugins/
+COPY --from=SPIGOT /Downloads/GroupManager.3.2.jar /app/plugins/
 
-COPY --from=SPIGOT /app/plugins/MultiverseCore.4.3.12.jar /app/plugins/
+COPY --from=SPIGOT /Downloads/MultiverseCore.4.3.12.jar /app/plugins/
 
 WORKDIR /app
 RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_SPIGOT}" nogui || exit 3 ;
