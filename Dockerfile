@@ -8,14 +8,13 @@
 FROM ubuntu:22.04 AS base
 
 # Execute build command: Updates the system
-# apt -> apk
 RUN apt update
 
 # Version
 ENV VERSION="1.20.4"
 
 # Custom metadata
-LABEL com.chris82111.minecraft.game.version="1.20.4"
+LABEL com.chris82111.minecraft.game.version=${VERSION}
 
 # Create volume mounts.
 # Example: `--mount type=bind,source="$(pwd)"/minecraft,target=/minecraft`
@@ -47,8 +46,10 @@ ENV ACCEPT_EULA="false"
 # variables -------------------------------------------------------------------
 
 ENV MINECRAFT_APPS_VERSION="/minecraft/apps/${VERSION}/"
+
 ENV MINECRAFT_VANILLA="minecraft_server.${VERSION}.jar"
 ENV MINECRAFT_SPIGOT="spigot-${VERSION}.jar"
+
 ENV MOD_GROUP_MANAGER="GroupManager.3.2.jar"
 ENV MOD_MULTIVERSE_CORE="MultiverseCore.4.3.12.jar"
 
