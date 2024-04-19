@@ -1,6 +1,31 @@
 # syntax=docker/dockerfile:1
 
 #------------------------------------------------------------------------------
+### openjdk_stage
+#------------------------------------------------------------------------------
+
+# Copy and use the data with these commands:
+# `COPY --from=openjdk_stage /opt/jdk-21.0.2 /opt/jdk-21.0.2`
+# `ENV PATH=/opt/jdk-21.0.2/bin:$PATH`
+FROM alpine AS openjdk_stage
+
+WORKDIR /build/
+
+# Add local or remote files and directories: Downloads java and checks file
+# TODO-Production
+#ADD \
+#  --checksum=sha256:a2def047a73941e01a73739f92755f86b895811afb1f91243db214cff5bdac3f \
+#  https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz \
+#  openjdk-21.0.2.tar.gz
+
+# TODO-Debug: 
+COPY openjdk-21.0.2.tar.gz .
+
+# Extracts the archive
+RUN tar -xvf openjdk-21.0.2.tar.gz -C /opt/
+
+
+#------------------------------------------------------------------------------
 ### base_stage
 #------------------------------------------------------------------------------
 
@@ -160,25 +185,7 @@ ENV evalGetMinecraftApp='/bin/sh -c "\
 
 # opt. Software ---------------------------------------------------------------
 
-WORKDIR /build/
-
-# Add local or remote files and directories: Downloads java and checks file
-# TODO-Production
-#ADD \
-#  --checksum=sha256:a2def047a73941e01a73739f92755f86b895811afb1f91243db214cff5bdac3f \
-#  https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz \
-#  openjdk-21.0.2.tar.gz
-
-# TODO-Production
-# Extracts the archive
-#RUN tar -xvf openjdk-21.0.2.tar.gz -C /opt/
-
-WORKDIR /opt/
-
-RUN rm -dr /build/
-
-# TODO-Debug: 
-ADD openjdk-21.0.2.tar.gz .
+COPY --from=openjdk_stage /opt/jdk-21.0.2 /opt/jdk-21.0.2
 
 # Execute build command: Checks if java is available
 RUN FILE="/opt/jdk-21.0.2/bin/java"; if [ -f "$FILE" ] ; then :; else exit 1 ; fi
