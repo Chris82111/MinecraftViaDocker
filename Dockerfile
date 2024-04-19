@@ -188,10 +188,14 @@ ENV PATH=/opt/jdk-21.0.2/bin:$PATH
 
 
 #------------------------------------------------------------------------------
-### Spigotmc
+### spigotmcStage
 #------------------------------------------------------------------------------
 
-FROM base AS SPIGOT
+# Copy the data with these commands:
+# `COPY --from=spigotmcStage /BuildTools/"${MINECRAFT_SPIGOT}" /app/`
+# `COPY --from=spigotmcStage /Downloads/GroupManager.3.2.jar /app/plugins/`
+# `COPY --from=spigotmcStage /Downloads/MultiverseCore.4.3.12.jar /app/plugins/`
+FROM base AS spigotmcStage
 
 RUN \
   apt install -y git && \
@@ -247,6 +251,53 @@ ADD ${MOD_MULTIVERSE_CORE} .
 
 
 #------------------------------------------------------------------------------
+### minecraftStage
+#------------------------------------------------------------------------------
+
+# base needs the have an `ENV` defined with the name `VERSION` and the number like `1.20.4`
+# base needs the have an `ENV` defined with the name `MINECRAFT_VANILLA` and the filename as content
+# Copy the content with this command:
+# `COPY --from=minecraftStage /Downloads/${MINECRAFT_VANILLA} /app/`
+
+FROM base AS minecraftStage
+
+RUN apt update && \
+  apt install -y jq && \
+  apt install -y wget
+  
+WORKDIR /Downloads
+
+ENV minecraftManifest="version_manifest_v2.json"
+ENV minecraftMethaFile="version_metha.json"
+
+ADD https://launchermeta.mojang.com/mc/game/version_manifest_v2.json "${minecraftManifest}"
+
+ENV fncMinecraftLatestVersion="jq --raw-output .latest.release ${minecraftManifest}"
+
+RUN if [ "$(${fncMinecraftLatestVersion})"="${VERSION}" ] ; then echo "yes" ; else exit 10; fi
+
+ENV evalMinecraftMethaUrl="jq -r \" .versions[] | select(.id==\\\"${VERSION}\\\") | .url \" ${minecraftManifest}"
+
+ENV evalMinecraftMethaSha1="jq -r \" .versions[] | select(.id==\\\"${VERSION}\\\") | .sha1 \" ${minecraftManifest}"
+
+ENV fncMinecraftVersionSha1="jq --raw-output .downloads.server.sha1 ${minecraftMethaFile}"
+
+ENV fncMinecraftVersionUrl="jq --raw-output .downloads.server.url ${minecraftMethaFile}"
+
+RUN if [  "$(eval ${evalMinecraftMethaSha1})" = "" ]; then exit 11 ; else echo "Version exists" ; fi
+
+RUN wget $(eval ${evalMinecraftMethaUrl}) -O "${minecraftMethaFile}"
+RUN echo "$(eval ${evalMinecraftMethaSha1}) ${minecraftMethaFile}" | sha1sum --check || exit 5
+
+# TODO-Production
+#RUN wget $(eval ${fncMinecraftVersionUrl}) -O "${MINECRAFT_VANILLA}"
+#RUN echo "$(eval ${fncMinecraftVersionSha1}) ${MINECRAFT_VANILLA}" | sha1sum --check || exit 6
+
+# TODO-Debug: 
+ADD "${MINECRAFT_VANILLA}" .
+
+
+#------------------------------------------------------------------------------
 ### Minecraft
 #------------------------------------------------------------------------------
 
@@ -273,15 +324,7 @@ EOF
 
 # create startup --------------------------------------------------------------
 
-# Add local or remote files and directories: Downloads Minecraft
-# TODO-Production
-#ADD \
-#  --checksum=sha256:c03fa6f39daa69ddf413c965a3a83084db746a7a138ce535a693293b5472d363 \
-#  https://piston-data.mojang.com/v1/objects/8dd1a28015f51b1803213892b50b7b4fc76e594d/server.jar \
-#  "${MINECRAFT_VANILLA}"
-
-# TODO-Debug: 
-ADD "${MINECRAFT_VANILLA}" .
+COPY --from=minecraftStage /Downloads/${MINECRAFT_VANILLA} /app/
 
 # Execute build command: Checks if Minecraft is available
 RUN FILE="${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
@@ -290,12 +333,13 @@ RUN FILE="${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
 RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_VANILLA}" nogui || exit 3 ;
 
 # Copy Spigot and mods
-COPY --from=SPIGOT /BuildTools/"${MINECRAFT_SPIGOT}" /app/
-COPY --from=SPIGOT /Downloads/GroupManager.3.2.jar /app/plugins/
-COPY --from=SPIGOT /Downloads/MultiverseCore.4.3.12.jar /app/plugins/
+COPY --from=spigotmcStage /BuildTools/"${MINECRAFT_SPIGOT}" /app/
+COPY --from=spigotmcStage /Downloads/GroupManager.3.2.jar /app/plugins/
+COPY --from=spigotmcStage /Downloads/MultiverseCore.4.3.12.jar /app/plugins/
 
 # Starts Spiegot for the first time without agreeing to the EULA
 RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_SPIGOT}" nogui || exit 3 ;
+
 
 # Setup the entrypoint
 WORKDIR /minecraft
