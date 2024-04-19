@@ -268,7 +268,7 @@ RUN apt update && \
 WORKDIR /Downloads
 
 ENV minecraftManifest="version_manifest_v2.json"
-ENV minecraftMethaFile="version_metha.json"
+ENV minecraftMetaFile="version_meta.json"
 
 ADD https://launchermeta.mojang.com/mc/game/version_manifest_v2.json "${minecraftManifest}"
 
@@ -276,18 +276,18 @@ ENV fncMinecraftLatestVersion="jq --raw-output .latest.release ${minecraftManife
 
 RUN if [ "$(${fncMinecraftLatestVersion})"="${VERSION}" ] ; then echo "yes" ; else exit 10; fi
 
-ENV evalMinecraftMethaUrl="jq -r \" .versions[] | select(.id==\\\"${VERSION}\\\") | .url \" ${minecraftManifest}"
+ENV evalMinecraftMetaUrl="jq -r \" .versions[] | select(.id==\\\"${VERSION}\\\") | .url \" ${minecraftManifest}"
 
-ENV evalMinecraftMethaSha1="jq -r \" .versions[] | select(.id==\\\"${VERSION}\\\") | .sha1 \" ${minecraftManifest}"
+ENV evalMinecraftMetaSha1="jq -r \" .versions[] | select(.id==\\\"${VERSION}\\\") | .sha1 \" ${minecraftManifest}"
 
-ENV fncMinecraftVersionSha1="jq --raw-output .downloads.server.sha1 ${minecraftMethaFile}"
+ENV fncMinecraftVersionSha1="jq --raw-output .downloads.server.sha1 ${minecraftMetaFile}"
 
-ENV fncMinecraftVersionUrl="jq --raw-output .downloads.server.url ${minecraftMethaFile}"
+ENV fncMinecraftVersionUrl="jq --raw-output .downloads.server.url ${minecraftMetaFile}"
 
-RUN if [  "$(eval ${evalMinecraftMethaSha1})" = "" ]; then exit 11 ; else echo "Version exists" ; fi
+RUN if [  "$(eval ${evalMinecraftMetaSha1})" = "" ]; then exit 11 ; else echo "Version exists" ; fi
 
-RUN wget $(eval ${evalMinecraftMethaUrl}) -O "${minecraftMethaFile}"
-RUN echo "$(eval ${evalMinecraftMethaSha1}) ${minecraftMethaFile}" | sha1sum --check || exit 5
+RUN wget $(eval ${evalMinecraftMetaUrl}) -O "${minecraftMetaFile}"
+RUN echo "$(eval ${evalMinecraftMetaSha1}) ${minecraftMetaFile}" | sha1sum --check || exit 5
 
 # TODO-Production
 #RUN wget $(eval ${fncMinecraftVersionUrl}) -O "${MINECRAFT_VANILLA}"
