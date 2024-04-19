@@ -1,11 +1,11 @@
 # syntax=docker/dockerfile:1
 
 #------------------------------------------------------------------------------
-### Base
+### base_stage
 #------------------------------------------------------------------------------
 
 # Create a new build stage from a base image.
-FROM ubuntu:22.04 AS base
+FROM ubuntu:22.04 AS base_stage
 
 # Execute build command: Updates the system
 RUN apt update
@@ -188,14 +188,14 @@ ENV PATH=/opt/jdk-21.0.2/bin:$PATH
 
 
 #------------------------------------------------------------------------------
-### spigotmcStage
+### spigotmc_stage
 #------------------------------------------------------------------------------
 
 # Copy the data with these commands:
-# `COPY --from=spigotmcStage /BuildTools/"${MINECRAFT_SPIGOT}" /app/`
-# `COPY --from=spigotmcStage /Downloads/GroupManager.3.2.jar /app/plugins/`
-# `COPY --from=spigotmcStage /Downloads/MultiverseCore.4.3.12.jar /app/plugins/`
-FROM base AS spigotmcStage
+# `COPY --from=spigotmc_stage /BuildTools/"${MINECRAFT_SPIGOT}" /app/`
+# `COPY --from=spigotmc_stage /Downloads/"${MOD_GROUP_MANAGER}" /app/plugins/`
+# `COPY --from=spigotmc_stage /Downloads/"${MOD_MULTIVERSE_CORE}" /app/plugins/`
+FROM base_stage AS spigotmc_stage
 
 RUN \
   apt install -y git && \
@@ -251,15 +251,15 @@ ADD ${MOD_MULTIVERSE_CORE} .
 
 
 #------------------------------------------------------------------------------
-### minecraftStage
+### minecraft_stage
 #------------------------------------------------------------------------------
 
-# base needs the have an `ENV` defined with the name `VERSION` and the number like `1.20.4`
-# base needs the have an `ENV` defined with the name `MINECRAFT_VANILLA` and the filename as content
+# base_stage needs the have an `ENV` defined with the name `VERSION` and the number like `1.20.4`
+# base_stage needs the have an `ENV` defined with the name `MINECRAFT_VANILLA` and the filename as content
 # Copy the content with this command:
-# `COPY --from=minecraftStage /Downloads/${MINECRAFT_VANILLA} /app/`
+# `COPY --from=minecraft_stage /Downloads/${MINECRAFT_VANILLA} /app/`
 
-FROM base AS minecraftStage
+FROM base_stage AS minecraft_stage
 
 RUN apt update && \
   apt install -y jq && \
@@ -298,10 +298,10 @@ ADD "${MINECRAFT_VANILLA}" .
 
 
 #------------------------------------------------------------------------------
-### Minecraft
+### imageStage
 #------------------------------------------------------------------------------
 
-FROM base AS NORMAL
+FROM base_stage AS image_stage
 
 RUN \
   apt install -y jq
@@ -324,7 +324,7 @@ EOF
 
 # create startup --------------------------------------------------------------
 
-COPY --from=minecraftStage /Downloads/${MINECRAFT_VANILLA} /app/
+COPY --from=minecraft_stage /Downloads/${MINECRAFT_VANILLA} /app/
 
 # Execute build command: Checks if Minecraft is available
 RUN FILE="${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
@@ -333,9 +333,9 @@ RUN FILE="${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
 RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_VANILLA}" nogui || exit 3 ;
 
 # Copy Spigot and mods
-COPY --from=spigotmcStage /BuildTools/"${MINECRAFT_SPIGOT}" /app/
-COPY --from=spigotmcStage /Downloads/GroupManager.3.2.jar /app/plugins/
-COPY --from=spigotmcStage /Downloads/MultiverseCore.4.3.12.jar /app/plugins/
+COPY --from=spigotmc_stage /BuildTools/"${MINECRAFT_SPIGOT}" /app/
+COPY --from=spigotmc_stage /Downloads/"${MOD_GROUP_MANAGER}" /app/plugins/
+COPY --from=spigotmc_stage /Downloads/"${MOD_MULTIVERSE_CORE}" /app/plugins/
 
 # Starts Spiegot for the first time without agreeing to the EULA
 RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_SPIGOT}" nogui || exit 3 ;
