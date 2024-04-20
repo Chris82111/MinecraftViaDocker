@@ -86,22 +86,27 @@ ENV ACCEPT_EULA="false"
 
 # variables -------------------------------------------------------------------
 
+# Directory with all jar files
 ENV minecraftAppsVersionDirectory="/minecraft/apps/${VERSION}/"
 
+# Server application
 ENV minecraftVanillaJar="minecraft_server.${VERSION}.jar"
 ENV minecraftSpigotJar="spigot-${VERSION}.jar"
 
+# Used mods
 ENV modGroupManagerJar="GroupManager.3.2.jar"
 ENV modMultiverseCoreJar="MultiverseCore.4.3.12.jar"
 
 # Stores additional configurations
 ENV dockerStartupFileName="startup.json"
 
+# Colored output
 ENV colorBYellow='\033[1;33m'
 ENV colorBGreen='\033[1;32m'
 ENV colorBPurple='\033[1;35m'
 ENV colorNormal='\033[0m'
 
+# Colored output note
 ENV noteInfo="[ ${colorBYellow}inf${colorNormal} ]"
 ENV noteNothing="[ ${colorBPurple}nul${colorNormal} ]"
 ENV noteEntry="[ ${colorBGreen}ent${colorNormal} ]"
@@ -227,8 +232,8 @@ RUN \
 # Change working directory.
 WORKDIR /BuildTools
 
-# Download BuildTools
 # TODO-Production
+# Download BuildTools
 #ADD \
 #  --checksum=sha256:42678cf1a115e6a75711f4e925b3c2af3a814171af37c7fde9e9b611ded90637 \
 #  https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar \
@@ -247,9 +252,9 @@ ADD "${minecraftSpigotJar}" /BuildTools/
 
 WORKDIR /Downloads
 
+# TODO-Production
 # GroupManager
 # source https://github.com/ElgarL/GroupManager/releases
-# TODO-Production
 #ADD \
 #  --checksum=sha256:7c9fa7e2ea5b3ff2b114be876b2521976408e78ec1587ee56f4aae65521f30ef \
 #  https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar \
@@ -258,9 +263,9 @@ WORKDIR /Downloads
 # TODO-Debug: 
 ADD ${modGroupManagerJar} .
 
+# TODO-Production
 # multiverse-core
 # source https://dev.bukkit.org/projects/multiverse-core/files
-# TODO-Production
 #RUN \
 #  wget https://dev.bukkit.org/projects/multiverse-core/files/4744018/download \
 #  -O ${modMultiverseCoreJar} && \
@@ -307,10 +312,12 @@ ENV fncMinecraftVersionUrl="jq --raw-output .downloads.server.url ${minecraftMet
 
 RUN if [  "$(eval ${evalMinecraftMetaSha1})" = "" ]; then exit 11 ; else echo "Version exists" ; fi
 
+# Download meta file
 RUN wget $(eval ${evalMinecraftMetaUrl}) -O "${minecraftMetaFile}"
 RUN echo "$(eval ${evalMinecraftMetaSha1}) ${minecraftMetaFile}" | sha1sum --check || exit 5
 
 # TODO-Production
+# Download Minecraft
 #RUN wget $(eval ${fncMinecraftVersionUrl}) -O "${minecraftVanillaJar}"
 #RUN echo "$(eval ${fncMinecraftVersionSha1}) ${minecraftVanillaJar}" | sha1sum --check || exit 6
 
