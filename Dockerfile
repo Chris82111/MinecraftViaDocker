@@ -1,28 +1,42 @@
 # syntax=docker/dockerfile:1
 
 #------------------------------------------------------------------------------
+### global variables
+#------------------------------------------------------------------------------
+
+ARG globalOpenJdkOptDirectoryName="jdk-21.0.2"
+
+
+#------------------------------------------------------------------------------
 ### openjdk_stage
 #------------------------------------------------------------------------------
 
 # Copy and use the data with these commands:
-# `COPY --from=openjdk_stage /opt/jdk-21.0.2 /opt/jdk-21.0.2`
-# `ENV PATH=/opt/jdk-21.0.2/bin:$PATH`
+#   `ARG globalOpenJdkOptDirectoryName`
+#   `COPY --from=openjdk_stage /opt/${globalOpenJdkOptDirectoryName} /opt/${globalOpenJdkOptDirectoryName}`
+#   `ENV PATH=/opt/${globalOpenJdkOptDirectoryName}/bin:$PATH`
 FROM alpine AS openjdk_stage
+
+ARG globalOpenJdkOptDirectoryName
+
+ENV openJdkArchive="openjdk-21.0.2.tar.gz"
 
 WORKDIR /build/
 
-# Add local or remote files and directories: Downloads java and checks file
 # TODO-Production
-#ADD \
-#  --checksum=sha256:a2def047a73941e01a73739f92755f86b895811afb1f91243db214cff5bdac3f \
+# Downloads java and checks file
+#ADD --checksum=sha256:a2def047a73941e01a73739f92755f86b895811afb1f91243db214cff5bdac3f \
 #  https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz \
-#  openjdk-21.0.2.tar.gz
+#  ${openJdkArchive}
 
 # TODO-Debug: 
-COPY openjdk-21.0.2.tar.gz .
+COPY ${openJdkArchive} .
 
 # Extracts the archive
-RUN tar -xvf openjdk-21.0.2.tar.gz -C /opt/
+RUN tar -xvf ${openJdkArchive} -C /opt/
+
+# Checks if java is available
+RUN FILE="/opt/${globalOpenJdkOptDirectoryName}/bin/java"; if [ -f "$FILE" ] ; then :; else exit 1 ; fi
 
 
 #------------------------------------------------------------------------------
@@ -32,8 +46,10 @@ RUN tar -xvf openjdk-21.0.2.tar.gz -C /opt/
 # Create a new build stage from a base image.
 FROM ubuntu:22.04 AS base_stage
 
-# Execute build command: Updates the system
+# Updates the system
 RUN apt update
+
+ARG globalOpenJdkOptDirectoryName
 
 # Version
 ENV VERSION="1.20.4"
@@ -185,13 +201,11 @@ ENV evalGetMinecraftApp='/bin/sh -c "\
 
 # opt. Software ---------------------------------------------------------------
 
-COPY --from=openjdk_stage /opt/jdk-21.0.2 /opt/jdk-21.0.2
+# Copies extracted openjdk
+COPY --from=openjdk_stage /opt/${globalOpenJdkOptDirectoryName} /opt/${globalOpenJdkOptDirectoryName}
 
-# Execute build command: Checks if java is available
-RUN FILE="/opt/jdk-21.0.2/bin/java"; if [ -f "$FILE" ] ; then :; else exit 1 ; fi
-
-# Set environment variable: Makes `java` known as a program
-ENV PATH=/opt/jdk-21.0.2/bin:$PATH
+# Makes `java` known as a program
+ENV PATH=/opt/${globalOpenJdkOptDirectoryName}/bin:$PATH
 
 
 #------------------------------------------------------------------------------
@@ -223,7 +237,7 @@ WORKDIR /BuildTools
 # TODO-Debug: 
 ADD BuildTools.jar /BuildTools/
 
-# Execute build command: Build spigotmc
+# Build spigotmc
 #RUN java -jar BuildTools.jar --rev latest
 
 # TODO-Debug: 
@@ -268,7 +282,7 @@ ADD ${MOD_MULTIVERSE_CORE} .
 
 FROM base_stage AS minecraft_stage
 
-RUN apt update && \
+RUN \
   apt install -y jq && \
   apt install -y wget
   
@@ -333,7 +347,7 @@ EOF
 
 COPY --from=minecraft_stage /Downloads/${MINECRAFT_VANILLA} /app/
 
-# Execute build command: Checks if Minecraft is available
+# Checks if Minecraft is available
 RUN FILE="${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
 
 # Starts Minecraft for the first time without agreeing to the EULA
