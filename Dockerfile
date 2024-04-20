@@ -86,16 +86,16 @@ ENV ACCEPT_EULA="false"
 
 # variables -------------------------------------------------------------------
 
-ENV MINECRAFT_APPS_VERSION="/minecraft/apps/${VERSION}/"
+ENV minecraftAppsVersionDirectory="/minecraft/apps/${VERSION}/"
 
-ENV MINECRAFT_VANILLA="minecraft_server.${VERSION}.jar"
-ENV MINECRAFT_SPIGOT="spigot-${VERSION}.jar"
+ENV minecraftVanillaJar="minecraft_server.${VERSION}.jar"
+ENV minecraftSpigotJar="spigot-${VERSION}.jar"
 
-ENV MOD_GROUP_MANAGER="GroupManager.3.2.jar"
-ENV MOD_MULTIVERSE_CORE="MultiverseCore.4.3.12.jar"
+ENV modGroupManagerJar="GroupManager.3.2.jar"
+ENV modMultiverseCoreJar="MultiverseCore.4.3.12.jar"
 
 # Stores additional configurations
-ENV STARTUP_NAME="startup.json"
+ENV dockerStartupFileName="startup.json"
 
 ENV colorBYellow='\033[1;33m'
 ENV colorBGreen='\033[1;32m'
@@ -124,12 +124,12 @@ ENV evalInitialCopy='/bin/sh -c "\
 #           Example: `eval $evalCopyVersions`
 # @return   string, log message
 ENV evalCopyVersions='/bin/sh -c "\
-  mkdir -p ${MINECRAFT_APPS_VERSION} ; \
-  cp -n /app/plugins/${MOD_GROUP_MANAGER} ${MINECRAFT_APPS_VERSION}/${MOD_GROUP_MANAGER} ; \
-  cp -n /app/plugins/${MOD_MULTIVERSE_CORE} ${MINECRAFT_APPS_VERSION}/${MOD_MULTIVERSE_CORE} ; \
-  cp -n /app/\"${MINECRAFT_VANILLA}\" ${MINECRAFT_APPS_VERSION}/\"${MINECRAFT_VANILLA}\" ; \
-  cp -n /app/\"${MINECRAFT_SPIGOT}\" ${MINECRAFT_APPS_VERSION}/\"${MINECRAFT_SPIGOT}\" ; \
-  echo \"The data has been copied here ${MINECRAFT_APPS_VERSION}\" ; \
+  mkdir -p ${minecraftAppsVersionDirectory} ; \
+  cp -n /app/plugins/${modGroupManagerJar} ${minecraftAppsVersionDirectory}/${modGroupManagerJar} ; \
+  cp -n /app/plugins/${modMultiverseCoreJar} ${minecraftAppsVersionDirectory}/${modMultiverseCoreJar} ; \
+  cp -n /app/\"${minecraftVanillaJar}\" ${minecraftAppsVersionDirectory}/\"${minecraftVanillaJar}\" ; \
+  cp -n /app/\"${minecraftSpigotJar}\" ${minecraftAppsVersionDirectory}/\"${minecraftSpigotJar}\" ; \
+  echo \"The data has been copied here ${minecraftAppsVersionDirectory}\" ; \
   " '
 
 # @brief    The value of the `eula` key in the `eula.txt` file in the current folder is set to `true`
@@ -153,12 +153,12 @@ ENV evalSetEula='/bin/sh -c "\
 # @brief    Reads the value of an entry in the file `startup.json`
 #           Example: `echo $($fncIfFalseThenVanillaElseSpigot)`
 # @return   bool, value of the variable
-ENV fncIfFalseThenVanillaElseSpigot="jq .start.ifFalseThenVanillaElseSpigot ./${STARTUP_NAME}"
+ENV fncIfFalseThenVanillaElseSpigot="jq .start.ifFalseThenVanillaElseSpigot ./${dockerStartupFileName}"
 
 # @brief    Reads the java parameters
 #           Example: `echo $($fncJavaParam)`
 # @return   string, value of the variable
-ENV fncJavaParam="jq --raw-output .java.param ./${STARTUP_NAME}"
+ENV fncJavaParam="jq --raw-output .java.param ./${dockerStartupFileName}"
 
 # @brief    Checks if Vanilla should be used
 #           Example: `eval $evalIsVanilla`
@@ -184,15 +184,15 @@ ENV evalIsSpigot='/bin/sh -c "\
 
 # @brief    Returns the application that is to be started
 #           Example: `eval $evalGetMinecraftApp`
-# @return   string, returns the value stored in `MINECRAFT_VANILLA` or `MINECRAFT_SPIGOT`
+# @return   string, returns the value stored in `minecraftVanillaJar` or `minecraftSpigotJar`
 ENV evalGetMinecraftApp='/bin/sh -c "\
   if [ \"$(eval ${evalIsVanilla})\" = \"true\" ] ; \
   then \
-    echo ${MINECRAFT_VANILLA} ; \
+    echo ${minecraftVanillaJar} ; \
   else \
     if [ \"$(eval ${evalIsSpigot})\" = \"true\" ] ; \
     then \
-      echo ${MINECRAFT_SPIGOT} ; \
+      echo ${minecraftSpigotJar} ; \
     else \
       echo "" ; \
       exit 3 ; \
@@ -213,9 +213,9 @@ ENV PATH=/opt/${globalOpenJdkOptDirectoryName}/bin:$PATH
 #------------------------------------------------------------------------------
 
 # Copy the data with these commands:
-# `COPY --from=spigotmc_stage /BuildTools/"${MINECRAFT_SPIGOT}" /app/`
-# `COPY --from=spigotmc_stage /Downloads/"${MOD_GROUP_MANAGER}" /app/plugins/`
-# `COPY --from=spigotmc_stage /Downloads/"${MOD_MULTIVERSE_CORE}" /app/plugins/`
+# `COPY --from=spigotmc_stage /BuildTools/"${minecraftSpigotJar}" /app/`
+# `COPY --from=spigotmc_stage /Downloads/"${modGroupManagerJar}" /app/plugins/`
+# `COPY --from=spigotmc_stage /Downloads/"${modMultiverseCoreJar}" /app/plugins/`
 FROM base_stage AS spigotmc_stage
 
 RUN \
@@ -241,7 +241,7 @@ ADD BuildTools.jar /BuildTools/
 #RUN java -jar BuildTools.jar --rev latest
 
 # TODO-Debug: 
-ADD "${MINECRAFT_SPIGOT}" /BuildTools/
+ADD "${minecraftSpigotJar}" /BuildTools/
 
 # mods download ---------------------------------------------------------------
 
@@ -253,22 +253,22 @@ WORKDIR /Downloads
 #ADD \
 #  --checksum=sha256:7c9fa7e2ea5b3ff2b114be876b2521976408e78ec1587ee56f4aae65521f30ef \
 #  https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar \
-#  ${MOD_GROUP_MANAGER}
+#  ${modGroupManagerJar}
 
 # TODO-Debug: 
-ADD ${MOD_GROUP_MANAGER} .
+ADD ${modGroupManagerJar} .
 
 # multiverse-core
 # source https://dev.bukkit.org/projects/multiverse-core/files
 # TODO-Production
 #RUN \
 #  wget https://dev.bukkit.org/projects/multiverse-core/files/4744018/download \
-#  -O ${MOD_MULTIVERSE_CORE} && \
-#  echo "98237AAF35C6EE7BFD95FB7F399EF703B3E72BFF8EAB488A904AAD9D4530CD10 ${MOD_MULTIVERSE_CORE}" | \
+#  -O ${modMultiverseCoreJar} && \
+#  echo "98237AAF35C6EE7BFD95FB7F399EF703B3E72BFF8EAB488A904AAD9D4530CD10 ${modMultiverseCoreJar}" | \
 #  sha256sum --check || exit 4
 
 # TODO-Debug: 
-ADD ${MOD_MULTIVERSE_CORE} .
+ADD ${modMultiverseCoreJar} .
 
 
 #------------------------------------------------------------------------------
@@ -276,9 +276,9 @@ ADD ${MOD_MULTIVERSE_CORE} .
 #------------------------------------------------------------------------------
 
 # base_stage needs the have an `ENV` defined with the name `VERSION` and the number like `1.20.4`
-# base_stage needs the have an `ENV` defined with the name `MINECRAFT_VANILLA` and the filename as content
+# base_stage needs the have an `ENV` defined with the name `minecraftVanillaJar` and the filename as content
 # Copy the content with this command:
-# `COPY --from=minecraft_stage /Downloads/${MINECRAFT_VANILLA} /app/`
+# `COPY --from=minecraft_stage /Downloads/${minecraftVanillaJar} /app/`
 
 FROM base_stage AS minecraft_stage
 
@@ -311,11 +311,11 @@ RUN wget $(eval ${evalMinecraftMetaUrl}) -O "${minecraftMetaFile}"
 RUN echo "$(eval ${evalMinecraftMetaSha1}) ${minecraftMetaFile}" | sha1sum --check || exit 5
 
 # TODO-Production
-#RUN wget $(eval ${fncMinecraftVersionUrl}) -O "${MINECRAFT_VANILLA}"
-#RUN echo "$(eval ${fncMinecraftVersionSha1}) ${MINECRAFT_VANILLA}" | sha1sum --check || exit 6
+#RUN wget $(eval ${fncMinecraftVersionUrl}) -O "${minecraftVanillaJar}"
+#RUN echo "$(eval ${fncMinecraftVersionSha1}) ${minecraftVanillaJar}" | sha1sum --check || exit 6
 
 # TODO-Debug: 
-ADD "${MINECRAFT_VANILLA}" .
+ADD "${minecraftVanillaJar}" .
 
 
 #------------------------------------------------------------------------------
@@ -345,21 +345,21 @@ EOF
 
 # create startup --------------------------------------------------------------
 
-COPY --from=minecraft_stage /Downloads/${MINECRAFT_VANILLA} /app/
+COPY --from=minecraft_stage /Downloads/${minecraftVanillaJar} /app/
 
 # Checks if Minecraft is available
-RUN FILE="${MINECRAFT_VANILLA}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
+RUN FILE="${minecraftVanillaJar}" ; if [ -f "${FILE}" ] ; then :; else exit 1 ; fi
 
 # Starts Minecraft for the first time without agreeing to the EULA
-RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_VANILLA}" nogui || exit 3 ;
+RUN java ${JAVA_PARAMETER} -jar "${minecraftVanillaJar}" nogui || exit 3 ;
 
 # Copy Spigot and mods
-COPY --from=spigotmc_stage /BuildTools/"${MINECRAFT_SPIGOT}" /app/
-COPY --from=spigotmc_stage /Downloads/"${MOD_GROUP_MANAGER}" /app/plugins/
-COPY --from=spigotmc_stage /Downloads/"${MOD_MULTIVERSE_CORE}" /app/plugins/
+COPY --from=spigotmc_stage /BuildTools/"${minecraftSpigotJar}" /app/
+COPY --from=spigotmc_stage /Downloads/"${modGroupManagerJar}" /app/plugins/
+COPY --from=spigotmc_stage /Downloads/"${modMultiverseCoreJar}" /app/plugins/
 
 # Starts Spiegot for the first time without agreeing to the EULA
-RUN java ${JAVA_PARAMETER} -jar "${MINECRAFT_SPIGOT}" nogui || exit 3 ;
+RUN java ${JAVA_PARAMETER} -jar "${minecraftSpigotJar}" nogui || exit 3 ;
 
 
 # Setup the entrypoint
