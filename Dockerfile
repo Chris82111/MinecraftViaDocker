@@ -382,7 +382,8 @@ ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteEntry} $(eval ${evalSetEula})\" && \
   echo \"${noteEntry} java param: $(${fncJavaParam})\" && \
   echo \"${noteEntry} java app  : $(eval ${evalGetMinecraftApp})\" && \
-  rm -f stdin.pipe ; mkfifo stdin.pipe ; sleep infinity > stdin.pipe & java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui < stdin.pipe & wait $! ; rm -f stdin.pipe ; \
+  trap 'echo \"Signal TERM caught\" ; echo \"stop\" >> stdin.pipe' TERM && \
+  rm -f stdin.pipe ; mkfifo stdin.pipe ; sleep infinity > stdin.pipe & java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui < stdin.pipe & wait $! ; echo \"Minecraft closed\" ; rm -f stdin.pipe ; \
   echo \"The program has been executed\" "]
 
 
