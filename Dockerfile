@@ -382,11 +382,12 @@ ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteEntry} $(eval ${evalSetEula})\" && \
   echo \"${noteEntry} java param: $(${fncJavaParam})\" && \
   echo \"${noteEntry} java app  : $(eval ${evalGetMinecraftApp})\" && \
-  mkfifo stdin.pipe ; \
-  java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui < stdin.pipe & :; \
-  sleep infinity > stdin.pipe & :; wait $! ; \
+  rm -f stdin.pipe ; mkfifo stdin.pipe ; sleep infinity > stdin.pipe & java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui < stdin.pipe & wait $! ; rm -f stdin.pipe ; \
   echo \"The program has been executed\" "]
-  
+
+
+
+
 # You must end the sleep command to exit the container.
 
 #------------------------------------------------------------------------------
