@@ -1,5 +1,11 @@
 # syntax=docker/dockerfile:1
 
+#Linux, you can use the windows command a well
+#docker exec minecraftVanillaU /bin/sh -c 'echo "/say hello" >> stdin.pipe'
+
+#Windows
+#docker exec minecraftVanillaU /bin/sh -c "echo '/say hello' >> stdin.pipe"
+
 #------------------------------------------------------------------------------
 ### global variables
 #------------------------------------------------------------------------------
@@ -368,7 +374,6 @@ COPY --from=spigotmc_stage /Downloads/"${modMultiverseCoreJar}" /app/plugins/
 # Starts Spiegot for the first time without agreeing to the EULA
 RUN java ${JAVA_PARAMETER} -jar "${minecraftSpigotJar}" nogui || exit 3 ;
 
-
 # Setup the entrypoint
 WORKDIR /minecraft
 ENTRYPOINT ["/bin/sh", "-c" , "\
@@ -377,9 +382,12 @@ ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteEntry} $(eval ${evalSetEula})\" && \
   echo \"${noteEntry} java param: $(${fncJavaParam})\" && \
   echo \"${noteEntry} java app  : $(eval ${evalGetMinecraftApp})\" && \
-  java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui && \
+  mkfifo stdin.pipe ; \
+  java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui < stdin.pipe & :; \
+  sleep infinity > stdin.pipe & :; wait $! ; \
   echo \"The program has been executed\" "]
-
+  
+# You must end the sleep command to exit the container.
 
 #------------------------------------------------------------------------------
 ### EOF
