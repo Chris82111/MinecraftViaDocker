@@ -1,18 +1,63 @@
 # MinecraftViaDocker
 
+⚠ The current version is currently still copying the data in parallel to the Dockerfile.
+
+The Dockerfile creates a container with a Minecraft server. Alternatively, a Spiegot server can also be created. The internally created files are copied to a subfolder of the mounted folder (`apps/<version>`) after starting the container. Other data is only copied if the folder is empty. With each start, the system checks whether the folder is empty and copies the data if necessary. The Dockerfile can therefore be used to operate a server or to obtain only the necessary `*.jar` files.
+
+## Using Docker
+
+After cloning the repository or downloading the Dockerfile, the image and the container must be created.
+
+Command to create the image:
+
+```sh
+docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.20.4 .
+```
+
+Command to create the container without executing it:
+
+```sh
+docker container create -it --name minecraftContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env ACCEPT_EULA=true minecraft_via_docker:1.20.4 sh
+```
+
+Start
+
+```sh
+docker start minecraftContainer
+```
+
+Stop
+
+```sh
+docker stop minecraftContainer
+```
+
+Commands can be sent directly from the host system to the application in the container.
+Under Linux you can use the following command or the Windows command:
+
+```sh
+docker exec minecraftContainer /bin/sh -c 'echo "/say hello" >> stdin.pipe'
+```
+
+Under Windows you can use the following command:
+
+```ps1
+docker exec minecraftContainer /bin/sh -c "echo '/say hello' >> stdin.pipe"
+```
+
+Connect to a running container to execute commands:
+
+```sh
+docker exec -it minecraftContainer sh
+```
+
+Remove
+
+```sh
+docker stop minecraftContainer ; docker remove minecraftContainer
+```
+
 <img src="readmeMisc/overview.jpg" width="300" alt="">
-
-Recommended command to create the image:
-
-```sh
-docker build --build-arg="JAVA_PARAMETER=-Xmx2048M -Xms2048M" --build-arg="START_SPIGOT=false" -t minecraftImage .
-```
-
-Recommended command for exiting the container:
-
-```sh
-docker container create -it --name minecraftContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env ACCEPT_EULA=true minecraftImage sh
-```
 
 <!--
 digraph G {
@@ -26,91 +71,3 @@ digraph G {
   { rank=same; minecraft; Container }
 }
 -->
-
-## Working List of Commands
-
-Url to download the actual list of minecraft versions with download link: [version_manifest_v2.json](https://launchermeta.mojang.com/mc/game/version_manifest_v2.json)
-
-Create image from current folders `Dockerfile` (optional --no-cache):
-
-```sh
-docker build -t my_minecraft_image .
-```
-
-```sh
-docker build --no-cache -t my_minecraft_image .
-```
-
-```sh
-docker build --build-arg="JAVA_PARAMETER=-Xmx2048M -Xms2048M" -t my_minecraft_image .
-```
-
-List all Images:
-
-```sh
-docker images
-```
-
-Deleate Image
-
-```sh
-docker image rm my_minecraft_image
-```
-
-Check group
-
-```sh
-if grep -q "docker" /etc/group ; then echo Yes; else echo no; fi
-```
-
-Add group (needs restart)
-
-```sh
-usermod -aG docker $USER
-```
-
-List all containers
-
-```sh
-docker ps -a
-```
-
-Create without running
-
-```sh
-docker container create -it --name minecraftVanillaU -p 25565:25565 ubuntu:latest sh
-```
-
-```sh
-docker container create -it --name minecraftVanillaU -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env ACCEPT_EULA=true my_minecraft_image sh
-```
-
-Stop
-
-```sh
-docker stop minecraftVanillaU
-```
-
-Remove
-
-```sh
-docker stop minecraftVanillaU ; docker remove minecraftVanillaU
-```
-
-Start
-
-```sh
-docker start minecraftVanillaU
-```
-
-(1) Execute
-
-```sh
-docker exec -it minecraftVanillaU sh
-```
-
-(2) Execute multiple
-
-```sh
-docker exec -it minecraftVanillaU sh -c 'export VAR1=value1; echo Hi; echo Yes${VAR1}'
-```
