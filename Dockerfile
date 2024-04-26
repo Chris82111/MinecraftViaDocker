@@ -113,9 +113,7 @@ ENV colorBPurple='\033[1;35m'
 ENV colorNormal='\033[0m'
 
 # Colored output note
-ENV noteInfo="[ ${colorBYellow}inf${colorNormal} ]"
-ENV noteNothing="[ ${colorBPurple}nul${colorNormal} ]"
-ENV noteEntry="[ ${colorBGreen}ent${colorNormal} ]"
+ENV noteInfo="[ ${colorBYellow}MvD${colorNormal} ]"
 
 # functions -------------------------------------------------------------------
 
@@ -125,10 +123,10 @@ ENV noteEntry="[ ${colorBGreen}ent${colorNormal} ]"
 ENV evalInitialCopy='/bin/sh -c "\
   if [ -z \"$(ls -A /minecraft)\" ] ; \
   then \
-    echo \"${noteInfo} The internal data was copied to the outside\" ; \
+    echo \"The internal data was copied to the outside\" ; \
     cp -r /app/* /minecraft ; \
   else\
-    echo \"${noteNothing} Data is available on the outside, nothing has been copied\" ; \
+    echo \"Data is available on the outside, nothing has been copied\" ; \
   fi " '
   
 # @brief    Copies files to the mount bind folder, but does not overwrite existing files
@@ -156,9 +154,9 @@ ENV evalSetEula='/bin/sh -c "\
   if [ \"${ACCEPT_EULA}\" = \"true\" ] ; \
   then \
     eval ${evalSetEulaTrue} ; \
-    echo \"${noteInfo} The eula file was automatically set to true\" ; \
+    echo \"The eula file was automatically set to true\" ; \
   else \
-    echo \"${noteNothing} The eula file has not been touched\" ; \
+    echo \"The eula file has not been touched\" ; \
   fi " '
 
 # @brief    Reads the value of an entry in the file `startup.json`
@@ -375,17 +373,24 @@ COPY --from=spigotmc_stage /Downloads/"${modMultiverseCoreJar}" /app/plugins/
 # Starts Spiegot for the first time without agreeing to the EULA
 RUN java ${JAVA_PARAMETER} -jar "${minecraftSpigotJar}" nogui || exit 3 ;
 
+ENV trapCommand='echo "${noteInfo} Stops the app" ; echo "stop" >> stdin.pipe ; wait ${PID}'
+
 # Setup the entrypoint
 WORKDIR /minecraft
 ENTRYPOINT ["/bin/sh", "-c" , "\
-  echo \"${noteEntry} $(eval ${evalInitialCopy})\" && \
-  echo \"${noteEntry} $(eval ${evalCopyVersions})\" && \
-  echo \"${noteEntry} $(eval ${evalSetEula})\" && \
-  echo \"${noteEntry} java param: $(${fncJavaParam})\" && \
-  echo \"${noteEntry} java app  : $(eval ${evalGetMinecraftApp})\" && \
-  trap 'echo \"Signal TERM caught\" ; echo \"stop\" >> stdin.pipe ; wait ${PID}' TERM && \
-  rm -f stdin.pipe ; mkfifo stdin.pipe ; sleep infinity > stdin.pipe & java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui < stdin.pipe & PID=$! ; wait ${PID} ; echo \"Minecraft closed\" ; rm -f stdin.pipe ; \
-  echo \"The program has been executed\" "]
+  echo \"${noteInfo} $(eval ${evalInitialCopy})\" && \
+  echo \"${noteInfo} $(eval ${evalCopyVersions})\" && \
+  echo \"${noteInfo} $(eval ${evalSetEula})\" && \
+  echo \"${noteInfo} java param: $(${fncJavaParam})\" && \
+  echo \"${noteInfo} java app  : $(eval ${evalGetMinecraftApp})\" && \
+  trap \"${trapCommand}\" TERM && \
+    rm -f stdin.pipe ; \
+    mkfifo stdin.pipe ; \
+    sleep infinity > stdin.pipe & java $(${fncJavaParam}) -jar $(eval ${evalGetMinecraftApp}) nogui < stdin.pipe & PID=$! ; \
+    wait ${PID} ; \
+  echo \"${noteInfo} Minecraft closed\" ; \
+  rm -f stdin.pipe ; \
+  echo \"${noteInfo} All actions were completed successfully\" "]
 
 
 #------------------------------------------------------------------------------
