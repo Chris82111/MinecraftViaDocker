@@ -29,14 +29,10 @@ ENV openJdkArchive="openjdk-21.0.2.tar.gz"
 
 WORKDIR /build/
 
-# TODO-Production
 # Downloads java and checks file
-#ADD --checksum=sha256:a2def047a73941e01a73739f92755f86b895811afb1f91243db214cff5bdac3f \
-#  https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz \
-#  ${openJdkArchive}
-
-# TODO-Debug: 
-COPY ${openJdkArchive} .
+ADD --checksum=sha256:a2def047a73941e01a73739f92755f86b895811afb1f91243db214cff5bdac3f \
+  https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz \
+  ${openJdkArchive}
 
 # Extracts the archive
 RUN tar -xvf ${openJdkArchive} -C /opt/
@@ -236,48 +232,34 @@ RUN \
 # Change working directory.
 WORKDIR /BuildTools
 
-# TODO-Production
 # Download BuildTools
-#ADD \
-#  --checksum=sha256:42678cf1a115e6a75711f4e925b3c2af3a814171af37c7fde9e9b611ded90637 \
-#  https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar \
-#  BuildTools.jar
-
-# TODO-Debug: 
-ADD BuildTools.jar /BuildTools/
+ADD \
+  --checksum=sha256:42678cf1a115e6a75711f4e925b3c2af3a814171af37c7fde9e9b611ded90637 \
+  https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar \
+  BuildTools.jar
 
 # Build spigotmc
-#RUN java -jar BuildTools.jar --rev latest
+RUN java -jar BuildTools.jar --rev latest
 
-# TODO-Debug: 
-ADD "${minecraftSpigotJar}" /BuildTools/
 
 # mods download ---------------------------------------------------------------
 
 WORKDIR /Downloads
 
-# TODO-Production
 # GroupManager
 # source https://github.com/ElgarL/GroupManager/releases
-#ADD \
-#  --checksum=sha256:7c9fa7e2ea5b3ff2b114be876b2521976408e78ec1587ee56f4aae65521f30ef \
-#  https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar \
-#  ${modGroupManagerJar}
+ADD \
+  --checksum=sha256:7c9fa7e2ea5b3ff2b114be876b2521976408e78ec1587ee56f4aae65521f30ef \
+  https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar \
+  ${modGroupManagerJar}
 
-# TODO-Debug: 
-ADD ${modGroupManagerJar} .
-
-# TODO-Production
 # multiverse-core
 # source https://dev.bukkit.org/projects/multiverse-core/files
-#RUN \
-#  wget https://dev.bukkit.org/projects/multiverse-core/files/4744018/download \
-#  -O ${modMultiverseCoreJar} && \
-#  echo "98237AAF35C6EE7BFD95FB7F399EF703B3E72BFF8EAB488A904AAD9D4530CD10 ${modMultiverseCoreJar}" | \
-#  sha256sum --check || exit 4
-
-# TODO-Debug: 
-ADD ${modMultiverseCoreJar} .
+RUN \
+  wget https://dev.bukkit.org/projects/multiverse-core/files/4744018/download \
+  -O ${modMultiverseCoreJar} && \
+  echo "98237AAF35C6EE7BFD95FB7F399EF703B3E72BFF8EAB488A904AAD9D4530CD10 ${modMultiverseCoreJar}" | \
+  sha256sum --check || exit 4
 
 
 #------------------------------------------------------------------------------
@@ -320,13 +302,12 @@ RUN if [  "$(eval ${evalMinecraftMetaSha1})" = "" ]; then exit 11 ; else echo "V
 RUN wget $(eval ${evalMinecraftMetaUrl}) -O "${minecraftMetaFile}"
 RUN echo "$(eval ${evalMinecraftMetaSha1}) ${minecraftMetaFile}" | sha1sum --check || exit 5
 
-# TODO-Production
 # Download Minecraft
-#RUN wget $(eval ${fncMinecraftVersionUrl}) -O "${minecraftVanillaJar}"
-#RUN echo "$(eval ${fncMinecraftVersionSha1}) ${minecraftVanillaJar}" | sha1sum --check || exit 6
-
-# TODO-Debug: 
-ADD "${minecraftVanillaJar}" .
+RUN \
+  wget $(eval ${fncMinecraftVersionUrl}) \
+  -O "${minecraftVanillaJar}" && \
+  echo "$(eval ${fncMinecraftVersionSha1}) ${minecraftVanillaJar}" | \
+  sha1sum --check || exit 6
 
 
 #------------------------------------------------------------------------------
