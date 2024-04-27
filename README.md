@@ -19,7 +19,7 @@ docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START
 Command to create the container without executing it:
 
 ```sh
-docker container create -it --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env ACCEPT_EULA=true minecraft_via_docker:1.20.4 sh
+docker container create -it --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.20.4 sh
 ```
 
 Start

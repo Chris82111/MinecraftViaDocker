@@ -83,8 +83,8 @@ ARG START_SPIGOT=false
 # docker container create -----------------------------------------------------
 
 # If not set to `true` you need to edit the `eula.txt` file
-# Example: `--env ACCEPT_EULA=true`
-ENV ACCEPT_EULA="false"
+# Example: `--env EULA=true`
+ENV EULA="false"
 
 # variables -------------------------------------------------------------------
 
@@ -144,10 +144,10 @@ ENV evalSetEulaTrue="sed -i -e 's/eula=false/eula=true/g' eula.txt"
 
 # @brief    The value of the `eula` key in the `eula.txt` file in the current folder is set to `true`
 #           Example: `eval $evalSetEula`
-# @param    ACCEPT_EULA is checked and if true the command @see evalSetEulaTrue is executed
+# @param    EULA is checked and if true the command @see evalSetEulaTrue is executed
 # @return   string, log message
 ENV evalSetEula='/bin/sh -c "\
-  if [ \"${ACCEPT_EULA}\" = \"true\" ] ; \
+  if [ \"${EULA}\" = \"true\" ] ; \
   then \
     eval ${evalSetEulaTrue} ; \
     echo \"The eula file was automatically set to true\" ; \
