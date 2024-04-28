@@ -10,7 +10,7 @@
 ### global variables
 #------------------------------------------------------------------------------
 
-ARG globalOpenJdkOptDirectoryName="jdk-21.0.2"
+ARG globalOpenJdkOptDirectoryName="jdk-22.0.1"
 
 
 #------------------------------------------------------------------------------
@@ -25,13 +25,14 @@ FROM alpine AS openjdk_stage
 
 ARG globalOpenJdkOptDirectoryName
 
-ENV openJdkArchive="openjdk-21.0.2.tar.gz"
+ENV openJdkArchive="openjdk-22.0.1.tar.gz"
 
 WORKDIR /build/
 
 # Downloads java and checks file
-ADD --checksum=sha256:a2def047a73941e01a73739f92755f86b895811afb1f91243db214cff5bdac3f \
-  https://download.java.net/java/GA/jdk21.0.2/f2283984656d49d69e91c558476027ac/13/GPL/openjdk-21.0.2_linux-x64_bin.tar.gz \
+# Update: https://openjdk.org/
+ADD --checksum=sha256:133c8b65113304904cdef7c9103274d141cfb64b191ff48ceb6528aca25c67b1 \
+  https://download.java.net/java/GA/jdk22.0.1/c7ec1332f7bb44aeba2eb341ae18aca4/8/GPL/openjdk-22.0.1_linux-x64_bin.tar.gz \
   ${openJdkArchive}
 
 # Extracts the archive
@@ -54,7 +55,7 @@ RUN apt update
 ARG globalOpenJdkOptDirectoryName
 
 # Version
-ENV VERSION="1.20.4"
+ENV VERSION="1.20.5"
 
 # Custom metadata
 LABEL com.chris82111.minecraft.game.version=${VERSION}
@@ -241,6 +242,7 @@ RUN \
 WORKDIR /BuildTools
 
 # Download BuildTools
+# Update: https://www.spigotmc.org/wiki/buildtools/
 ADD \
   --checksum=sha256:42678cf1a115e6a75711f4e925b3c2af3a814171af37c7fde9e9b611ded90637 \
   https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar \
