@@ -93,12 +93,12 @@ ENV EULA="false"
 ENV minecraftAppsVersionDirectory="/minecraft/apps/${VERSION}/"
 
 # Server application
-ENV minecraftVanillaJar="minecraft_server.${VERSION}.jar"
-ENV minecraftSpigotJar="spigot-${VERSION}.jar"
+ENV minecraftVanillaJar="minecraft_server.jar"
+ENV minecraftSpigotJar="spigot.jar"
 
 # Used mods
-ENV modGroupManagerJar="GroupManager.3.2.jar"
-ENV modMultiverseCoreJar="MultiverseCore.4.3.12.jar"
+ENV modGroupManagerJar="GroupManager.jar"
+ENV modMultiverseCoreJar="MultiverseCore.jar"
 
 # Stores additional configurations
 ENV dockerStartupFileName="startup.json"
@@ -138,12 +138,16 @@ ENV evalCopyVersions='/bin/sh -c "\
   echo \"The data has been copied here ${minecraftAppsVersionDirectory}\" ; \
   " '
 
-# @brief    Copies the startup file to the mount bind folder, but does not overwrite the existing file
-#           Example: `eval $evalCopyStartup`
+# @brief    Copies the start files to the mount bind folder
+#           Example: `eval $evalCopyStartFiles`
 # @return   string, log message
-ENV evalCopyStartup='/bin/sh -c "\
+ENV evalCopyStartFiles='/bin/sh -c "\
   cp -n /app/${dockerStartupFileName} ./${dockerStartupFileName} ; \
-  echo \"The startup file has been copied\" ; \
+  cp /app/plugins/${modGroupManagerJar} ./plugins/${modGroupManagerJar} ; \
+  cp /app/plugins/${modMultiverseCoreJar} ./plugins/${modMultiverseCoreJar} ; \
+  cp /app/${minecraftVanillaJar} ./${minecraftVanillaJar} ; \
+  cp /app/${minecraftSpigotJar} ./${minecraftSpigotJar} ; \
+  echo \"The files have been copied\" ; \
   " '
 
 # @brief    The value of the `eula` key in the `eula.txt` file in the current folder is set to `true`
@@ -243,28 +247,30 @@ WORKDIR /BuildTools
 
 # Download BuildTools
 # Update: https://www.spigotmc.org/wiki/buildtools/
+# Update: https://hub.spigotmc.org/jenkins/job/BuildTools/
 ADD \
   --checksum=sha256:42678cf1a115e6a75711f4e925b3c2af3a814171af37c7fde9e9b611ded90637 \
-  https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar \
+  https://hub.spigotmc.org/jenkins/job/BuildTools/181/artifact/target/BuildTools.jar \
   BuildTools.jar
 
 # Build spigotmc
-RUN java -jar BuildTools.jar --rev latest
-
+RUN \
+  java -jar BuildTools.jar --rev ${VERSION} && \
+  mv ./spigot-${VERSION}.jar ./${minecraftSpigotJar}
 
 # mods download ---------------------------------------------------------------
 
 WORKDIR /Downloads
 
 # GroupManager
-# source https://github.com/ElgarL/GroupManager/releases
+# Update: https://github.com/ElgarL/GroupManager/releases
 ADD \
   --checksum=sha256:7c9fa7e2ea5b3ff2b114be876b2521976408e78ec1587ee56f4aae65521f30ef \
   https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar \
   ${modGroupManagerJar}
 
 # multiverse-core
-# source https://dev.bukkit.org/projects/multiverse-core/files
+# Update: https://dev.bukkit.org/projects/multiverse-core/files
 RUN \
   wget https://dev.bukkit.org/projects/multiverse-core/files/4744018/download \
   -O ${modMultiverseCoreJar} && \
@@ -371,7 +377,7 @@ WORKDIR /minecraft
 ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteInfo} $(eval ${evalInitialCopy})\" && \
   echo \"${noteInfo} $(eval ${evalCopyVersions})\" && \
-  echo \"${noteInfo} $(eval ${evalCopyStartup})\" && \
+  echo \"${noteInfo} $(eval ${evalCopyStartFiles})\" && \
   echo \"${noteInfo} $(eval ${evalSetEula})\" && \
   echo \"${noteInfo} java param: $(${fncJavaParam})\" && \
   echo \"${noteInfo} java app  : $(eval ${evalGetMinecraftApp})\" && \
