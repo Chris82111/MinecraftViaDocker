@@ -10,7 +10,7 @@ Docker creates a configuration file `startup.json`. In this file, you can select
 
 After cloning the repository or downloading the Dockerfile, the image and the container must be created.
 
-Command to create the image:
+Command to create the image (the creation takes about 215 seconds):
 
 ```sh
 docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.20.4 .
@@ -22,13 +22,13 @@ Command to create the container without executing it:
 docker container create -it --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.20.4 sh
 ```
 
-Start
+Start:
 
 ```sh
 docker start mcContainer
 ```
 
-Stop
+Stop, stopping the container sends the correct command to the app so that the app saves all data and shuts down:
 
 ```sh
 docker stop mcContainer
@@ -59,6 +59,8 @@ Remove
 docker stop mcContainer ; docker remove mcContainer
 ```
 
+## Overview
+
 <img src="readmeMisc/overview.jpg" width="300" alt="">
 
 <!--
@@ -73,3 +75,7 @@ digraph G {
   { rank=same; minecraft; Container }
 }
 -->
+
+## Terms
+
+All data contained in this Dockerfile, including without limitation e.g. source code, programs, applications have their own terms and must be respected. The "Unlicense license" refers to the GitHub repository and the Dockerfile but not to the data downloaded in the container.
