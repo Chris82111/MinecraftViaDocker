@@ -124,7 +124,7 @@ ENV evalInitialCopy='/bin/sh -c "\
   else\
     echo \"Data is available on the outside, nothing has been copied\" ; \
   fi " '
-  
+
 # @brief    Copies files to the mount bind folder, but does not overwrite existing files
 #           Example: `eval $evalCopyVersions`
 # @return   string, log message
@@ -135,6 +135,14 @@ ENV evalCopyVersions='/bin/sh -c "\
   cp -n /app/\"${minecraftVanillaJar}\" ${minecraftAppsVersionDirectory}/\"${minecraftVanillaJar}\" ; \
   cp -n /app/\"${minecraftSpigotJar}\" ${minecraftAppsVersionDirectory}/\"${minecraftSpigotJar}\" ; \
   echo \"The data has been copied here ${minecraftAppsVersionDirectory}\" ; \
+  " '
+
+# @brief    Copies the startup file to the mount bind folder, but does not overwrite the existing file
+#           Example: `eval $evalCopyStartup`
+# @return   string, log message
+ENV evalCopyStartup='/bin/sh -c "\
+  cp -n /app/${dockerStartupFileName} ./${dockerStartupFileName} ; \
+  echo \"The startup file has been copied\" ; \
   " '
 
 # @brief    The value of the `eula` key in the `eula.txt` file in the current folder is set to `true`
@@ -361,6 +369,7 @@ WORKDIR /minecraft
 ENTRYPOINT ["/bin/sh", "-c" , "\
   echo \"${noteInfo} $(eval ${evalInitialCopy})\" && \
   echo \"${noteInfo} $(eval ${evalCopyVersions})\" && \
+  echo \"${noteInfo} $(eval ${evalCopyStartup})\" && \
   echo \"${noteInfo} $(eval ${evalSetEula})\" && \
   echo \"${noteInfo} java param: $(${fncJavaParam})\" && \
   echo \"${noteInfo} java app  : $(eval ${evalGetMinecraftApp})\" && \

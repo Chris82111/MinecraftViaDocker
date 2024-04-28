@@ -1,6 +1,6 @@
 # MinecraftViaDocker
 
-The Dockerfile creates a container and downloads a Vanilla server and a Spiegot server. This is therefore an automation of the download. The internally created files are copied to a subfolder of the mounted folder (`apps/<version>`) after starting the container. Other data is only copied if the folder is empty. With each start, the system checks whether the folder is empty and copies the data if necessary. The Dockerfile can therefore be used to operate a server or to obtain only the necessary `*.jar` files.
+The Dockerfile creates a container and downloads a Vanilla server and a Spiegot server. This is therefore an automation of the download. The internally created files are copied to a subfolder of the mounted folder (`apps/<version>`) after starting the container. An additional `stdin.pipe` file for communication and a `startup.json` file are created. Other data is only copied if the folder is empty. With each start, the system checks whether the folder is empty and copies the data if necessary. The Dockerfile can therefore be used to operate a server or to obtain only the necessary `*.jar` files.
 
 ## Change Settings
 
