@@ -1,6 +1,15 @@
 # MinecraftViaDocker
 
-The Dockerfile creates a container and downloads a Vanilla server and a Spiegot server. This is therefore an automation of the download. The internally created files are copied to a subfolder of the mounted folder (`apps/<version>`) after starting the container. An additional `stdin.pipe` file for communication and a `startup.json` file are created. Other data is only copied if the folder is empty. With each start, the system checks whether the folder is empty and copies the data if necessary. The Dockerfile can therefore be used to operate a server or to obtain only the necessary `*.jar` files.
+The Dockerfile creates a container and downloads a Vanilla server and a Spiegot server. This is therefore an automation of the download. After starting the container:
+
+- The internally created files are copied to a subfolder of the mounted folder (`apps/<version>`).
+- The following four files are copied and existing files are overwritten:
+  - The two plugin files `GroupManager.jar` and `MultiverseCore.jar`
+  - The two server files `minecraft_server.jar` and `spigot.jar` are replaced.
+- An additional `stdin.pipe` file for communication and a `startup.json` file are created.
+- Other data is only copied if the folder is empty. With each start, the system checks whether the folder is empty and copies the data if necessary.
+
+The Dockerfile can therefore be used to operate a server or to obtain only the necessary `*.jar` files.
 
 ## Change Settings
 
@@ -13,13 +22,13 @@ After cloning the repository or downloading the Dockerfile, the image and the co
 Command to create the image (the creation takes about 215 seconds):
 
 ```sh
-docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.20.4 .
+docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.20.5 .
 ```
 
 Command to create the container without executing it:
 
 ```sh
-docker container create -it --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.20.4 sh
+docker container create -it --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.20.5 sh
 ```
 
 Start:
