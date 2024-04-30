@@ -22,13 +22,13 @@ After cloning the repository or downloading the Dockerfile, the image and the co
 Command to create the image (the creation takes about 215 seconds):
 
 ```sh
-docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.20.5 .
+docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.20.6 .
 ```
 
 Command to create the container without executing it:
 
 ```sh
-docker container create -it --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.20.5 sh
+docker container create -it --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.20.6 sh
 ```
 
 Start:

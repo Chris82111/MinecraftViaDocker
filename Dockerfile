@@ -1,11 +1,5 @@
 # syntax=docker/dockerfile:1
 
-#Linux, you can use the windows command a well
-#docker exec minecraftVanillaU /bin/sh -c 'echo "/say hello" >> stdin.pipe'
-
-#Windows
-#docker exec minecraftVanillaU /bin/sh -c "echo '/say hello' >> stdin.pipe"
-
 #------------------------------------------------------------------------------
 ### global variables
 #------------------------------------------------------------------------------
@@ -55,7 +49,8 @@ RUN apt update
 ARG globalOpenJdkOptDirectoryName
 
 # Version
-ENV VERSION="1.20.5"
+# Update: https://www.minecraft.net/de-de/download/server
+ENV VERSION="1.20.6"
 
 # Custom metadata
 LABEL com.chris82111.minecraft.game.version=${VERSION}
