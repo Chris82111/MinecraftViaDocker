@@ -55,7 +55,8 @@ RUN apt update
 ARG globalOpenJdkOptDirectoryName
 
 # Version
-ENV VERSION="1.20.5"
+# Update: https://www.minecraft.net/de-de/download/server
+ENV VERSION="1.20.6"
 
 # Custom metadata
 LABEL com.chris82111.minecraft.game.version=${VERSION}
