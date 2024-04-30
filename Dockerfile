@@ -1,11 +1,5 @@
 # syntax=docker/dockerfile:1
 
-#Linux, you can use the windows command a well
-#docker exec minecraftVanillaU /bin/sh -c 'echo "/say hello" >> stdin.pipe'
-
-#Windows
-#docker exec minecraftVanillaU /bin/sh -c "echo '/say hello' >> stdin.pipe"
-
 #------------------------------------------------------------------------------
 ### global variables
 #------------------------------------------------------------------------------
