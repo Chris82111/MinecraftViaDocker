@@ -1,5 +1,11 @@
 # MinecraftViaDocker
 
+<div align="center">
+
+[![SshBackupOfDocker](https://img.shields.io/badge/Backup-SshBackupOfDocker-blue)](https://github.com/Chris82111/SshBackupOfDocker "Link to SshBackupOfDocker")
+
+</div>
+
 The Dockerfile creates a container and downloads a Vanilla server and a Spiegot server. This is therefore an automation of the download. After starting the container:
 
 - The internally created files are copied to a subfolder of the mounted folder (`apps/<version>`).
@@ -10,6 +16,8 @@ The Dockerfile creates a container and downloads a Vanilla server and a Spiegot 
 - Other data is only copied if the folder is empty. With each start, the system checks whether the folder is empty and copies the data if necessary.
 
 The Dockerfile can therefore be used to operate a server or to obtain only the necessary `*.jar` files.
+
+A backup of a remote server can be created with the repository [SshBackupOfDocker](https://github.com/Chris82111/SshBackupOfDocker).
 
 ## Change Settings
 
@@ -22,13 +30,13 @@ After cloning the repository or downloading the Dockerfile, the image and the co
 Command to create the image (the creation takes about 215 seconds):
 
 ```sh
-docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.20.6 .
+docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.21.1 .
 ```
 
 Command to create the container without executing it:
 
 ```sh
-docker container create -it --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.20.6 sh
+docker container create -it --restart always --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.21.1 sh
 ```
 
 Start:
@@ -70,20 +78,13 @@ docker stop mcContainer ; docker remove mcContainer
 
 ## Overview
 
-<img src="readmeMisc/overview.jpg" width="300" alt="">
-
-<!--
-digraph G {
-  Dockerfile -> Image[label="docker build ..."];
-  http[shape=cylinder,label="https:\n\nopenjdk\nminecraft\nspigot\nGroupManager\nMultiverseCore"];
-  http -> Image;
-  { rank=same; http; Image }
-  Image -> Container[label="docker container create ..."];
-  minecraft[shape=cylinder,label="/minecraft"];
-  minecraft -> Container[label="mount"];
-  { rank=same; minecraft; Container }
-}
--->
+```mermaid
+flowchart TD
+    A[Dockerfile] -->|docker build ...| B(Image)
+    C[https ...<br/>OpenJDK<br/>Minecraft<br/>SpigotMC<br/>GroupManager<br/>MultiverseCore] --> B
+    B --> |docker container create ...| D(Container)
+    E(/minecraft) --> |mount| D
+```
 
 ## Terms
 

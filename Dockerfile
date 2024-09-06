@@ -4,7 +4,7 @@
 ### global variables
 #------------------------------------------------------------------------------
 
-ARG globalOpenJdkOptDirectoryName="jdk-22.0.1"
+ARG globalOpenJdkOptDirectoryName="jdk-22.0.2"
 
 
 #------------------------------------------------------------------------------
@@ -19,18 +19,18 @@ FROM alpine AS openjdk_stage
 
 ARG globalOpenJdkOptDirectoryName
 
-ENV openJdkArchive="openjdk-22.0.1.tar.gz"
+ENV openJdkArchive="openjdk-22.0.2.tar.gz"
 
 WORKDIR /build/
 
 # Downloads java and checks file
 # Update: https://openjdk.org/
-ADD --checksum=sha256:133c8b65113304904cdef7c9103274d141cfb64b191ff48ceb6528aca25c67b1 \
-  https://download.java.net/java/GA/jdk22.0.1/c7ec1332f7bb44aeba2eb341ae18aca4/8/GPL/openjdk-22.0.1_linux-x64_bin.tar.gz \
+ADD --checksum=sha256:41536f115668308ecf4eba92aaf6acaeb0936225828b741efd83b6173ba82963 \
+  https://download.java.net/java/GA/jdk22.0.2/c9ecb94cd31b495da20a27d4581645e8/9/GPL/openjdk-22.0.2_linux-x64_bin.tar.gz \
   ${openJdkArchive}
 
 # Extracts the archive
-RUN tar -xvf ${openJdkArchive} -C /opt/
+RUN mkdir -p /opt/ ; tar -xvf ${openJdkArchive} -C /opt/
 
 # Checks if java is available
 RUN FILE="/opt/${globalOpenJdkOptDirectoryName}/bin/java"; if [ -f "$FILE" ] ; then :; else exit 1 ; fi
@@ -50,7 +50,7 @@ ARG globalOpenJdkOptDirectoryName
 
 # Version
 # Update: https://www.minecraft.net/de-de/download/server
-ENV VERSION="1.20.6"
+ENV VERSION="1.21.1"
 
 # Custom metadata
 LABEL com.chris82111.minecraft.game.version=${VERSION}
@@ -244,8 +244,8 @@ WORKDIR /BuildTools
 # Update: https://www.spigotmc.org/wiki/buildtools/
 # Update: https://hub.spigotmc.org/jenkins/job/BuildTools/
 ADD \
-  --checksum=sha256:42678cf1a115e6a75711f4e925b3c2af3a814171af37c7fde9e9b611ded90637 \
-  https://hub.spigotmc.org/jenkins/job/BuildTools/181/artifact/target/BuildTools.jar \
+  --checksum=sha256:cac4ac6e264acee1b6eb860ade956cb0df8dceb745377cb01125f3bd074236c1 \
+  https://hub.spigotmc.org/jenkins/job/BuildTools/186/artifact/target/BuildTools.jar \
   BuildTools.jar
 
 # Build spigotmc
