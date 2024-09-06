@@ -17,7 +17,7 @@ The Dockerfile creates a container and downloads a Vanilla server and a Spiegot 
 
 The Dockerfile can therefore be used to operate a server or to obtain only the necessary `*.jar` files.
 
-A backup of a remote server can be created with the repository [SshBackupOfDocker](https://img.shields.io/badge/Backup-SshBackupOfDocker-blue).
+A backup of a remote server can be created with the repository [SshBackupOfDocker](https://github.com/Chris82111/SshBackupOfDocker).
 
 ## Change Settings
 
