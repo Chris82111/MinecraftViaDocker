@@ -4,7 +4,7 @@
 ### global variables
 #------------------------------------------------------------------------------
 
-ARG globalOpenJdkOptDirectoryName="jdk-22.0.2"
+ARG globalOpenJdkOptDirectoryName="jdk-23.0.1"
 
 
 #------------------------------------------------------------------------------
@@ -19,14 +19,14 @@ FROM alpine AS openjdk_stage
 
 ARG globalOpenJdkOptDirectoryName
 
-ENV openJdkArchive="openjdk-22.0.2.tar.gz"
+ENV openJdkArchive="openjdk-23.0.1.tar.gz"
 
 WORKDIR /build/
 
 # Downloads java and checks file
 # Update: https://openjdk.org/
-ADD --checksum=sha256:41536f115668308ecf4eba92aaf6acaeb0936225828b741efd83b6173ba82963 \
-  https://download.java.net/java/GA/jdk22.0.2/c9ecb94cd31b495da20a27d4581645e8/9/GPL/openjdk-22.0.2_linux-x64_bin.tar.gz \
+ADD --checksum=sha256:dc9b6adc1550afd95e30e131c1c38044925cb656923f92f6dbf0fbd8c1405629 \
+  https://download.java.net/java/GA/jdk23.0.1/c28985cbf10d4e648e4004050f8781aa/11/GPL/openjdk-23.0.1_linux-x64_bin.tar.gz \
   ${openJdkArchive}
 
 # Extracts the archive
@@ -50,7 +50,7 @@ ARG globalOpenJdkOptDirectoryName
 
 # Version
 # Update: https://www.minecraft.net/de-de/download/server
-ENV VERSION="1.21.1"
+ENV VERSION="1.21.4"
 
 # Custom metadata
 LABEL com.chris82111.minecraft.game.version=${VERSION}
@@ -244,8 +244,8 @@ WORKDIR /BuildTools
 # Update: https://www.spigotmc.org/wiki/buildtools/
 # Update: https://hub.spigotmc.org/jenkins/job/BuildTools/
 ADD \
-  --checksum=sha256:cac4ac6e264acee1b6eb860ade956cb0df8dceb745377cb01125f3bd074236c1 \
-  https://hub.spigotmc.org/jenkins/job/BuildTools/186/artifact/target/BuildTools.jar \
+  --checksum=sha256:88034d8f35ac52ffda46126fab8512bb91d291ba9aacba6774d979c18447cc46 \
+  https://hub.spigotmc.org/jenkins/job/BuildTools/188/artifact/target/BuildTools.jar \
   BuildTools.jar
 
 # Build spigotmc
@@ -267,9 +267,9 @@ ADD \
 # multiverse-core
 # Update: https://dev.bukkit.org/projects/multiverse-core/files
 RUN \
-  wget https://dev.bukkit.org/projects/multiverse-core/files/4744018/download \
+  wget https://dev.bukkit.org/projects/multiverse-core/files/5901717/download \
   -O ${modMultiverseCoreJar} && \
-  echo "98237AAF35C6EE7BFD95FB7F399EF703B3E72BFF8EAB488A904AAD9D4530CD10 ${modMultiverseCoreJar}" | \
+  echo "27630E97C68612F2CCD1AF729055528E22887923CCE6F6CECC34E45583E5AE11 ${modMultiverseCoreJar}" | \
   sha256sum --check || exit 4
 
 
