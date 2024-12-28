@@ -76,6 +76,52 @@ Remove
 docker stop mcContainer ; docker remove mcContainer
 ```
 
+## Update an Old version
+
+1. Check the current container:
+
+    ```sh
+    docker ps --all
+    ```
+
+2. Stop current container:
+
+    ```sh
+    docker stop mcContainer
+    ```
+
+3. You need to create a backup of your world!
+
+4. Removing the old container:
+
+    ```sh
+    docker remove mcContainer
+    ```
+
+5. Pull latest repository data:
+
+    ```sh
+    git pull
+    ```
+
+6. Create the image:
+
+    ```sh
+    docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.21.4 .
+    ```
+
+7. Create the container:
+
+    ```sh
+    docker container create -it --restart always --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.21.4 sh
+    ```
+
+8. Start container:
+
+    ```sh
+    docker start mcContainer
+    ```
+
 ## Overview
 
 ```mermaid
