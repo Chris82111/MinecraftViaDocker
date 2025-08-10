@@ -4,7 +4,7 @@
 ### global variables
 #------------------------------------------------------------------------------
 
-ARG globalOpenJdkOptDirectoryName="jdk-23.0.1"
+ARG globalOpenJdkOptDirectoryName="jdk-24.0.2"
 
 
 #------------------------------------------------------------------------------
@@ -19,14 +19,15 @@ FROM alpine AS openjdk_stage
 
 ARG globalOpenJdkOptDirectoryName
 
-ENV openJdkArchive="openjdk-23.0.1.tar.gz"
+ENV openJdkArchive="openjdk-24.0.2.tar.gz"
 
 WORKDIR /build/
 
 # Downloads java and checks file
-# Update: https://openjdk.org/
-ADD --checksum=sha256:dc9b6adc1550afd95e30e131c1c38044925cb656923f92f6dbf0fbd8c1405629 \
-  https://download.java.net/java/GA/jdk23.0.1/c28985cbf10d4e648e4004050f8781aa/11/GPL/openjdk-23.0.1_linux-x64_bin.tar.gz \
+# UpdateVersion: https://openjdk.org/
+ADD \
+  --checksum=sha256:635050717feab0e4c283c8e90e79e944a2b65a3b6b21f1d37dcaadad4cc29548 \
+  https://download.java.net/java/GA/jdk24.0.2/fdc5d0102fe0414db21410ad5834341f/12/GPL/openjdk-24.0.2_linux-x64_bin.tar.gz \
   ${openJdkArchive}
 
 # Extracts the archive
@@ -49,11 +50,11 @@ RUN apt update
 ARG globalOpenJdkOptDirectoryName
 
 # Version
-# Update: https://www.minecraft.net/de-de/download/server
-ENV VERSION="1.21.4"
+# UpdateVersion: https://www.minecraft.net/de-de/download/server
+ENV VERSION="1.21.8"
 
 # Custom metadata
-LABEL com.chris82111.minecraft.game.version=${VERSION}
+LABEL com.github.chris82111.minecraft.game.version=${VERSION}
 
 # Create volume mounts.
 # Example: `--mount type=bind,source="$(pwd)"/minecraft,target=/minecraft`
@@ -241,11 +242,11 @@ RUN \
 WORKDIR /BuildTools
 
 # Download BuildTools
-# Update: https://www.spigotmc.org/wiki/buildtools/
-# Update: https://hub.spigotmc.org/jenkins/job/BuildTools/
+# UpdateVersion: https://www.spigotmc.org/wiki/buildtools/
+# UpdateVersion: https://hub.spigotmc.org/jenkins/job/BuildTools/
 ADD \
-  --checksum=sha256:88034d8f35ac52ffda46126fab8512bb91d291ba9aacba6774d979c18447cc46 \
-  https://hub.spigotmc.org/jenkins/job/BuildTools/188/artifact/target/BuildTools.jar \
+  --checksum=sha256:a9855da5f48438d6c8c2aded996e4dd94330249c7ef69e6c30c2454173750c7c \
+  https://hub.spigotmc.org/jenkins/job/BuildTools/193/artifact/target/BuildTools.jar \
   BuildTools.jar
 
 # Build spigotmc
@@ -258,20 +259,18 @@ RUN \
 WORKDIR /Downloads
 
 # GroupManager
-# Update: https://github.com/ElgarL/GroupManager/releases
+# UpdateVersion: https://github.com/ElgarL/GroupManager/releases
 ADD \
   --checksum=sha256:7c9fa7e2ea5b3ff2b114be876b2521976408e78ec1587ee56f4aae65521f30ef \
   https://github.com/ElgarL/GroupManager/releases/download/v3.2/GroupManager.jar \
   ${modGroupManagerJar}
 
 # multiverse-core
-# Update: https://dev.bukkit.org/projects/multiverse-core/files
-RUN \
-  wget https://dev.bukkit.org/projects/multiverse-core/files/5901717/download \
-  -O ${modMultiverseCoreJar} && \
-  echo "27630E97C68612F2CCD1AF729055528E22887923CCE6F6CECC34E45583E5AE11 ${modMultiverseCoreJar}" | \
-  sha256sum --check || exit 4
-
+# UpdateVersion: https://dev.bukkit.org/projects/multiverse-core/files
+ADD \
+  --checksum=sha256:44142bbb1040ea19c188dcb94841646fb17b57f9e83b47611116756509e1ebb7 \
+  https://dev.bukkit.org/projects/multiverse-core/files/6863178/download \
+  ${modMultiverseCoreJar}
 
 #------------------------------------------------------------------------------
 ### minecraft_stage
