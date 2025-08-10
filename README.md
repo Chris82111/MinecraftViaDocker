@@ -74,7 +74,7 @@ docker exec -it mcContainer sh
 Remove
 
 ```sh
-docker stop mcContainer ; docker remove mcContainer
+docker stop mcContainer ; docker rm mcContainer
 ```
 
 ## Update an Old version
@@ -96,7 +96,7 @@ docker stop mcContainer ; docker remove mcContainer
 4. Removing the old container:
 
     ```sh
-    docker remove mcContainer
+    docker rm mcContainer
     ```
 
 5. Pull latest repository data:
