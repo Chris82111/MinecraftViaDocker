@@ -4,7 +4,7 @@
 ### global variables
 #------------------------------------------------------------------------------
 
-ARG globalOpenJdkOptDirectoryName="jdk-24.0.2"
+ARG globalOpenJdkOptDirectoryName="jdk-25.0.1"
 
 
 #------------------------------------------------------------------------------
@@ -19,15 +19,15 @@ FROM alpine AS openjdk_stage
 
 ARG globalOpenJdkOptDirectoryName
 
-ENV openJdkArchive="openjdk-24.0.2.tar.gz"
+ENV openJdkArchive="openjdk-25.0.1.tar.gz"
 
 WORKDIR /build/
 
 # Downloads java and checks file
 # UpdateVersion: https://openjdk.org/
 ADD \
-  --checksum=sha256:635050717feab0e4c283c8e90e79e944a2b65a3b6b21f1d37dcaadad4cc29548 \
-  https://download.java.net/java/GA/jdk24.0.2/fdc5d0102fe0414db21410ad5834341f/12/GPL/openjdk-24.0.2_linux-x64_bin.tar.gz \
+  --checksum=sha256:514db33011f2c81fa9c589f7712735b42b9d2575db8f817d3be40a92d2ef7ad8 \
+  https://download.java.net/java/GA/jdk25.0.1/2fbf10d8c78e40bd87641c434705079d/8/GPL/openjdk-25.0.1_linux-x64_bin.tar.gz \
   ${openJdkArchive}
 
 # Extracts the archive
@@ -51,7 +51,7 @@ ARG globalOpenJdkOptDirectoryName
 
 # Version
 # UpdateVersion: https://www.minecraft.net/de-de/download/server
-ENV VERSION="1.21.8"
+ENV VERSION="1.21.11"
 
 # Custom metadata
 LABEL com.github.chris82111.minecraft.game.version=${VERSION}
@@ -245,8 +245,8 @@ WORKDIR /BuildTools
 # UpdateVersion: https://www.spigotmc.org/wiki/buildtools/
 # UpdateVersion: https://hub.spigotmc.org/jenkins/job/BuildTools/
 ADD \
-  --checksum=sha256:a9855da5f48438d6c8c2aded996e4dd94330249c7ef69e6c30c2454173750c7c \
-  https://hub.spigotmc.org/jenkins/job/BuildTools/193/artifact/target/BuildTools.jar \
+  --checksum=sha256:2fb4e2981228c024c6b7daabadd8bfbe388389137577b7447ee142b3894b1b34 \
+  https://hub.spigotmc.org/jenkins/job/BuildTools/196/artifact/target/BuildTools.jar \
   BuildTools.jar
 
 # Build spigotmc
@@ -267,9 +267,10 @@ ADD \
 
 # multiverse-core
 # UpdateVersion: https://dev.bukkit.org/projects/multiverse-core/files
+# UpdateVersion: https://github.com/Multiverse/Multiverse-Core/releases
 ADD \
-  --checksum=sha256:44142bbb1040ea19c188dcb94841646fb17b57f9e83b47611116756509e1ebb7 \
-  https://dev.bukkit.org/projects/multiverse-core/files/6863178/download \
+  --checksum=sha256:e254ec662af84bf9c2cb4a8278fb8c1e5582e06a9dafd761dc130aaf065c1a3b \
+  https://github.com/Multiverse/Multiverse-Core/releases/download/5.4.0/multiverse-core-5.4.0.jar \
   ${modMultiverseCoreJar}
 
 #------------------------------------------------------------------------------

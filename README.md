@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![SshBackupOfDocker](https://img.shields.io/badge/Server_Version-1.21.8-5b8b32)](https://www.minecraft.net/de-de/download/server "Currently supported server version and link to Minecraft")
+[![SshBackupOfDocker](https://img.shields.io/badge/Server_Version-1.21.11-5b8b32)](https://www.minecraft.net/de-de/download/server "Currently supported server version and link to Minecraft")
 [![SshBackupOfDocker](https://img.shields.io/badge/Backup-SshBackupOfDocker-blue)](https://github.com/Chris82111/SshBackupOfDocker "Link to SshBackupOfDocker")
 
 </div>
@@ -30,32 +30,38 @@ After cloning the repository or downloading the Dockerfile, the image and the co
 
 Command to create the image (the creation takes about 215 seconds):
 
-```sh
-docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.21.8 .
+```console
+docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.21.11 .
+```
+
+Create a sub folder:
+
+```console
+mkdir minecraft
 ```
 
 Command to create the container without executing it:
 
-```sh
-docker container create -it --restart always --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.21.8 sh
+```console
+docker container create -it --restart always --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.21.11 console
 ```
 
 Start:
 
-```sh
+```console
 docker start mcContainer
 ```
 
 Stop, stopping the container sends the correct command to the app so that the app saves all data and shuts down:
 
-```sh
+```console
 docker stop mcContainer
 ```
 
 Commands can be sent directly from the host system to the application in the container.
 Under Linux you can use the following command or the Windows command:
 
-```sh
+```console
 docker exec mcContainer /bin/sh -c 'echo "/say hello" >> stdin.pipe'
 ```
 
@@ -67,13 +73,13 @@ docker exec mcContainer /bin/sh -c "echo '/say hello' >> stdin.pipe"
 
 Connect to a running container to execute commands:
 
-```sh
+```console
 docker exec -it mcContainer sh
 ```
 
 Remove
 
-```sh
+```console
 docker stop mcContainer ; docker rm mcContainer
 ```
 
@@ -81,13 +87,13 @@ docker stop mcContainer ; docker rm mcContainer
 
 1. Check the current container:
 
-    ```sh
+    ```console
     docker ps --all
     ```
 
 2. Stop current container:
 
-    ```sh
+    ```console
     docker stop mcContainer
     ```
 
@@ -95,31 +101,31 @@ docker stop mcContainer ; docker rm mcContainer
 
 4. Removing the old container:
 
-    ```sh
+    ```console
     docker rm mcContainer
     ```
 
 5. Pull latest repository data:
 
-    ```sh
+    ```console
     git pull
     ```
 
 6. Create the image:
 
-    ```sh
-    docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.21.8 .
+    ```console
+    docker build --build-arg="JAVA_PARAMETER=-Xmx1024M -Xms1024M" --build-arg="START_SPIGOT=false" -t minecraft_via_docker:1.21.11 .
     ```
 
 7. Create the container:
 
-    ```sh
-    docker container create -it --restart always --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.21.8 sh
+    ```console
+    docker container create -it --restart always --name mcContainer -p 25565:25565 --mount type=bind,source="$(pwd)"/minecraft,target=/minecraft --env EULA=true minecraft_via_docker:1.21.11 sh
     ```
 
 8. Start container:
 
-    ```sh
+    ```console
     docker start mcContainer
     ```
 
